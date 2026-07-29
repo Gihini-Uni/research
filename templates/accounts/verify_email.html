@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify your email — Hoops</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+
+<div class="auth-split">
+
+  <!-- Decorative left panel -->
+  <aside class="auth-panel">
+    <a href="/" class="auth-panel-logo">Feedora</a>
+
+    <ul class="auth-panel-steps">
+      <li class="step-item">
+        <div class="step-dot done"></div>
+        <span class="step-label done">
+          {% if user_role == 'creator' %}Create profile{% else %}Create account{% endif %}
+        </span>
+      </li>
+      <li class="step-item">
+        <div class="step-dot active">2</div>
+        <span class="step-label active">Verify email</span>
+      </li>
+      {% if user_role == 'creator' %}
+      <li class="step-item">
+        <div class="step-dot">3</div>
+        <span class="step-label">You're all set</span>
+      </li>
+      {% endif %}
+    </ul>
+
+    <div class="auth-panel-footer">
+      Step 2 of {% if user_role == 'creator' %}3{% else %}2{% endif %}
+    </div>
+  </aside>
+
+  <!-- Mobile top bar -->
+  <div class="auth-mobile-bar">
+    <a href="/">Feedora</a>
+    <span class="step-tag">
+      Step 2 of {% if user_role == 'creator' %}3{% else %}2{% endif %}
+    </span>
+  </div>
+
+  <!-- Main content -->
+  <main class="auth-main" style="text-align:center;">
+
+    <!-- Email icon -->
+    <div class="verify-icon" style="margin-bottom:1.25rem;">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <rect x="2" y="5" width="22" height="16" rx="3" stroke="#185FA5" stroke-width="1.5"/>
+        <polyline points="2,8 13,16 24,8" stroke="#185FA5" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <h1 class="auth-title" style="font-size:26px;margin-bottom:8px;">Check your inbox</h1>
+    <p class="auth-subtitle" style="margin-bottom:4px;">We sent a 6-digit code to</p>
+    <p style="font-size:14px;font-weight:500;color:var(--brand-info);margin-bottom:2rem;">
+      {{ email }}
+    </p>
+
+    {% if error %}
+      <div class="alert alert-danger" style="text-align:left;">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" id="verify-form" novalidate>
+      {% csrf_token %}
+
+      <label class="form-label" style="margin-bottom:12px;display:block;">
+        Enter your verification code
+      </label>
+
+      <!-- OTP inputs -->
+      <div class="otp-group">
+        <input type="text" maxlength="1" class="otp-input" id="c1" name="c1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code">
+        <input type="text" maxlength="1" class="otp-input" id="c2" name="c2" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" class="otp-input" id="c3" name="c3" inputmode="numeric" pattern="[0-9]">
+        <span class="otp-sep">—</span>
+        <input type="text" maxlength="1" class="otp-input" id="c4" name="c4" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" class="otp-input" id="c5" name="c5" inputmode="numeric" pattern="[0-9]">
+        <input type="text" maxlength="1" class="otp-input" id="c6" name="c6" inputmode="numeric" pattern="[0-9]">
+      </div>
+
+      <p id="timer-line" style="font-size:12px;color:var(--brand-muted);margin:8px 0 1.5rem;">
+        Code expires in <span id="timer" style="font-weight:500;color:var(--brand-dark);">09:59</span>
+      </p>
+
+      <button type="submit" class="btn btn-dark" style="max-width:340px;margin:0 auto 14px;">
+        Verify email
+      </button>
+    </form>
+
+    <p class="text-muted-sm" style="margin-bottom:6px;">
+      Didn't receive it? Check your spam folder, or
+    </p>
+    <a href="{% url 'resend_code' %}" id="resend-btn"
+       style="font-size:13px;font-weight:500;color:var(--brand-info);pointer-events:none;opacity:0.4;text-decoration:none;">
+      Resend code
+    </a>
+
+    <div style="border-top:1px solid var(--brand-border);margin-top:1.75rem;padding-top:1rem;">
+      <a href="{% if user_role == 'creator' %}{% url 'register_creator' %}{% else %}{% url 'register_respondent' %}{% endif %}"
+         class="text-muted-sm">
+        ← Back to registration
+      </a>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ── OTP auto-advance ─────────────────────────── */
+var inputs = ['c1','c2','c3','c4','c5','c6'].map(function(id){ return document.getElementById(id); });
+
+inputs.forEach(function(inp, i) {
+  inp.addEventListener('input', function() {
+    inp.value = inp.value.replace(/[^0-9]/g, '');
+    if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+    inp.classList.toggle('filled', !!inp.value);
+  });
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+  });
+  /* handle paste of full code */
+  inp.addEventListener('paste', function(e) {
+    e.preventDefault();
+    var pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+    pasted.split('').slice(0, 6).forEach(function(ch, j) {
+      if (inputs[j]) { inputs[j].value = ch; inputs[j].classList.add('filled'); }
+    });
+    if (inputs[5]) inputs[5].focus();
+  });
+});
+
+/* ── Countdown timer ──────────────────────────── */
+var secs = 599;
+var timerEl = document.getElementById('timer');
+var resendBtn = document.getElementById('resend-btn');
+var timerLine = document.getElementById('timer-line');
+
+var iv = setInterval(function() {
+  secs--;
+  if (secs <= 0) {
+    clearInterval(iv);
+    timerLine.innerHTML = '<span style="color:var(--brand-error);font-size:12px;">Code expired. Please request a new one.</span>';
+    resendBtn.style.pointerEvents = 'auto';
+    resendBtn.style.opacity = '1';
+    return;
+  }
+  var m = Math.floor(secs / 60);
+  var s = secs % 60;
+  timerEl.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}, 1000);
+</script>
+</body>
+</html>

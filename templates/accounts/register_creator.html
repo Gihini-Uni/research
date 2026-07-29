@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register as Creator — Feedora</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+
+<div class="auth-split">
+
+  <!-- Decorative left panel -->
+  <aside class="auth-panel">
+    <a href="/" class="auth-panel-logo">Feedora</a>
+
+    <ul class="auth-panel-steps">
+      <li class="step-item">
+        <div class="step-dot active">1</div>
+        <span class="step-label active">Create profile</span>
+      </li>
+      <li class="step-item">
+        <div class="step-dot">2</div>
+        <span class="step-label">Verify email</span>
+      </li>
+      <li class="step-item">
+        <div class="step-dot">3</div>
+        <span class="step-label">You're all set</span>
+      </li>
+    </ul>
+
+    <div class="auth-panel-footer">Step 1 of 3</div>
+  </aside>
+
+  <!-- Mobile top bar -->
+  <div class="auth-mobile-bar">
+    <a href="/">Feedora</a>
+    <span class="step-tag">Step 1 of 3</span>
+  </div>
+
+  <!-- Main content -->
+  <main class="auth-main">
+
+    <h1 class="auth-title">Register account</h1>
+    <p class="auth-subtitle">Step 1 — Create your profile to get started</p>
+
+    {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" novalidate id="creator-form">
+      {% csrf_token %}
+
+      <!-- Name row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="first_name">
+            First Name <span class="required">*</span>
+          </label>
+          <input type="text" id="first_name" name="first_name" class="form-control"
+                 required autocomplete="given-name"
+                 value="{{ form.first_name|default:'' }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="last_name">
+            Last Name <span class="required">*</span>
+          </label>
+          <input type="text" id="last_name" name="last_name" class="form-control"
+                 required autocomplete="family-name"
+                 value="{{ form.last_name|default:'' }}">
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label class="form-label" for="email">
+          Email address <span class="required">*</span>
+        </label>
+        <input type="email" id="email" name="email" class="form-control"
+               required autocomplete="email"
+               value="{{ form.email|default:'' }}">
+        <p class="form-hint">*Work or school email is preferred as it helps us identify your institution.</p>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label class="form-label" for="password">
+          Password <span class="required">*</span>
+        </label>
+        <div class="input-wrap">
+          <input type="password" id="password" name="password" class="form-control"
+                 placeholder="Min 8 characters" required autocomplete="new-password"
+                 oninput="updateStrength(this.value)">
+          <span class="input-action" onclick="togglePw('password', this)">Show</span>
+        </div>
+        <div class="strength-bar" id="strength-bar">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <!-- Repeat password -->
+      <div class="form-group">
+        <label class="form-label" for="repeat_password">
+          Repeat Password <span class="required">*</span>
+        </label>
+        <div class="input-wrap">
+          <input type="password" id="repeat_password" name="repeat_password"
+                 class="form-control" required autocomplete="new-password">
+          <span class="input-action" onclick="togglePw('repeat_password', this)">Show</span>
+        </div>
+        <p class="form-error" id="pw-match-err" style="display:none;">Passwords do not match.</p>
+      </div>
+
+      <!-- Institution section -->
+      <div class="form-section">
+        <p class="form-section-label">Institution details</p>
+
+        <div class="form-group">
+          <label class="form-label" for="org_name">Organization / Institution name</label>
+          <input type="text" id="org_name" name="org_name" class="form-control"
+                 placeholder="e.g. University of Moratuwa, Acme Corp"
+                 value="{{ form.org_name|default:'' }}">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="org_type">Organization type</label>
+            <select id="org_type" name="org_type" class="form-control">
+              <option value="">Select type</option>
+              <option value="university" {% if form.org_type == 'university' %}selected{% endif %}>University</option>
+              <option value="school"     {% if form.org_type == 'school'     %}selected{% endif %}>School</option>
+              <option value="company"    {% if form.org_type == 'company'    %}selected{% endif %}>Company</option>
+              <option value="research"   {% if form.org_type == 'research'   %}selected{% endif %}>Research institute</option>
+              <option value="other"      {% if form.org_type == 'other'      %}selected{% endif %}>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="user_role">Your role</label>
+            <input type="text" id="user_role" name="user_role" class="form-control"
+                   placeholder="e.g. Student, Lecturer"
+                   value="{{ form.user_role|default:'' }}">
+          </div>
+        </div>
+
+        <!--<div class="form-group">
+          <label class="form-label" for="country">Country</label>
+          <select id="country" name="country" class="form-control">
+            <option value="">Select country</option>
+            <option value="LK" {% if form.country == 'LK' %}selected{% endif %}>Sri Lanka</option>
+            <option value="GB" {% if form.country == 'GB' %}selected{% endif %}>United Kingdom</option>
+            <option value="US" {% if form.country == 'US' %}selected{% endif %}>United States</option>
+            <option value="AU" {% if form.country == 'AU' %}selected{% endif %}>Australia</option>
+            <option value="IN" {% if form.country == 'IN' %}selected{% endif %}>India</option>
+            <option value="OTHER">Other</option>
+          </select>
+        </div>--> <!--Country selection removed for now. Will add if needed-->
+      </div>
+
+      <!-- Terms -->
+      <div class="form-group" style="margin-bottom:1.25rem;">
+        <label class="form-check">
+          <input type="checkbox" name="terms" id="terms" required>
+          <span class="form-check-label">
+            I agree to the <a href="/terms/" class="link">Terms of Service</a> and
+            <a href="/privacy/" class="link">Privacy Policy</a>.
+            I understand my data will be stored securely.
+          </span>
+        </label>
+        <p class="form-error" id="terms-err" style="display:none;">You must agree to the terms to continue.</p>
+      </div>
+
+      <button type="submit" class="btn btn-dark" style="margin-bottom:14px;">Register</button>
+    </form>
+
+    <p class="text-muted-sm" style="text-align:center;">
+      Already have an account?
+      <a href="{% url 'role_select_login' %}" class="link">Login Now!</a>
+    </p>
+
+  </main>
+</div>
+
+<script>
+function togglePw(id, el) {
+  var inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text'; el.textContent = 'Hide'; }
+  else { inp.type = 'password'; el.textContent = 'Show'; }
+}
+
+function updateStrength(val) {
+  var bar = document.getElementById('strength-bar');
+  var score = 0;
+  if (val.length >= 8) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  bar.className = 'strength-bar' + (score ? ' s' + score : '');
+}
+
+document.getElementById('creator-form').addEventListener('submit', function(e) {
+  var ok = true;
+
+  var p1 = document.getElementById('password').value;
+  var p2 = document.getElementById('repeat_password').value;
+  var pwErr = document.getElementById('pw-match-err');
+  if (p1 !== p2) {
+    e.preventDefault(); ok = false;
+    pwErr.style.display = 'block';
+    document.getElementById('repeat_password').classList.add('is-invalid');
+  } else {
+    pwErr.style.display = 'none';
+    document.getElementById('repeat_password').classList.remove('is-invalid');
+  }
+
+  var terms = document.getElementById('terms');
+  var termsErr = document.getElementById('terms-err');
+  if (!terms.checked) {
+    e.preventDefault(); ok = false;
+    termsErr.style.display = 'block';
+  } else {
+    termsErr.style.display = 'none';
+  }
+});
+</script>
+</body>
+</html>

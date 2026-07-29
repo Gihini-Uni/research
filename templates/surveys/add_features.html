@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Add Features — {{ survey.title }} — Feedora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% load static %}
+<style>
+:root{
+  --ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;
+  --line:#e8e8e0;--surface:#fff;--hover:#f4f4ee;--bg:#fafaf7;
+  --purple:#7A4FA8;--purple-light:#f0eef8;--purple-mid:#d8d4f0;
+  --green:#16a34a;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--line);display:grid;grid-template-columns:340px 1fr 320px;align-items:center;padding:0 16px;position:sticky;top:0;z-index:200;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.brand{font-family:var(--serif);font-size:20px;color:var(--ink);text-decoration:none;}
+.survey-name{font-size:13px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+.topbar-centre{display:flex;align-items:center;justify-content:center;height:100%;}
+.topbar-tab{padding:8px 18px;background:none;border:none;font-size:13px;font-weight:500;color:var(--ink-3);border-bottom:2px solid transparent;height:100%;cursor:pointer;transition:all 0.15s;text-decoration:none;display:inline-flex;align-items:center;}
+.topbar-tab:hover{color:var(--ink);}
+.topbar-tab.active{color:var(--ink);border-bottom-color:var(--ink);background:var(--bg);}
+.topbar-right{display:flex;align-items:center;justify-content:flex-end;gap:8px;}
+.btn-publish{padding:7px 16px;background:var(--ink);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;}
+.btn-publish:hover{opacity:0.85;}
+.btn-outline{padding:7px 14px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:5px;}
+.btn-outline:hover{background:var(--hover);}
+.status-pill{font-size:12px;padding:4px 12px;border-radius:100px;font-weight:500;}
+.status-draft{background:#fef9c3;color:#854d0e;}
+.status-published{background:#dcfce7;color:#166534;}
+.status-closed{background:#fee2e2;color:#991b1b;}
+.outer{display:flex;min-height:calc(100vh - 52px);}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;flex-shrink:0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;}
+.sidebar-group-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-3);padding:0 8px;margin:16px 0 6px;}
+.sidebar-group-title:first-child{margin-top:0;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:13px;color:var(--ink-2);cursor:pointer;transition:all 0.12s;border:none;background:transparent;width:100%;text-align:left;}
+.nav-item:hover{background:var(--hover);color:var(--ink);}
+.nav-item.active{background:var(--purple-light);color:var(--purple);font-weight:500;}
+.nav-item .nav-dot{width:7px;height:7px;border-radius:50%;background:var(--line);flex-shrink:0;}
+.nav-item.active .nav-dot{background:var(--purple);}
+.nav-item.feat-on .nav-dot{background:var(--green);}
+.main{flex:1;padding:28px 32px 60px;max-width:780px;}
+.section-panel{display:none;}
+.section-panel.active{display:block;}
+.panel-title{font-family:var(--serif);font-size:22px;font-weight:400;margin-bottom:4px;}
+.panel-desc{font-size:13px;color:var(--ink-2);margin-bottom:24px;line-height:1.5;}
+.lock-banner{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#0369a1;display:flex;align-items:center;gap:8px;}
+.feat-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:14px;transition:border-color 0.15s;}
+.feat-card.enabled{border-color:var(--purple);border-left:4px solid var(--purple);}
+.feat-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+.feat-card-header.has-body{margin-bottom:16px;}
+.feat-card-title{font-size:14px;font-weight:500;color:var(--ink);}
+.feat-card-desc{font-size:12px;color:var(--ink-2);margin-top:3px;line-height:1.5;}
+.toggle{position:relative;width:40px;height:22px;background:#d0cfd7;border-radius:11px;cursor:pointer;transition:background 0.2s;flex-shrink:0;}
+.toggle::after{content:'';position:absolute;width:17px;height:17px;background:#fff;border-radius:50%;top:2.5px;left:2.5px;transition:left 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+.toggle.on{background:var(--purple);}
+.toggle.on::after{left:20.5px;}
+.feat-body{display:none;}
+.feat-card.enabled .feat-body{display:block;}
+.mascot-grid{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.mascot-opt{border:2px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all 0.15s;text-align:center;min-width:100px;}
+.mascot-opt:hover{border-color:var(--purple-mid);}
+.mascot-opt.selected{border-color:var(--purple);background:var(--purple-light);}
+.mascot-opt.coming{opacity:0.45;cursor:not-allowed;}
+.mascot-face{font-size:32px;margin-bottom:6px;}
+.mascot-name{font-size:12px;font-weight:500;color:var(--ink);}
+.mascot-opt.selected .mascot-name{color:var(--purple);}
+.coming-tag{font-size:10px;color:var(--ink-3);background:var(--hover);padding:1px 6px;border-radius:100px;margin-top:3px;display:inline-block;}
+.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;max-width:240px;}
+.pos-btn{padding:7px 10px;background:var(--hover);border:1px solid var(--line);border-radius:7px;font-size:12px;color:var(--ink-2);cursor:pointer;text-align:center;}
+.pos-btn:hover{border-color:var(--purple-mid);}
+.pos-btn.active{background:var(--purple-light);border-color:var(--purple);color:var(--purple);font-weight:500;}
+.msg-list{display:flex;flex-direction:column;gap:8px;}
+.msg-row{background:var(--hover);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--ink-2);line-height:1.5;}
+.msg-trigger{font-size:11px;font-weight:600;color:var(--purple);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px;}
+.prog-opts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.prog-opt{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--hover);border:1px solid var(--line);border-radius:8px;font-size:12px;color:var(--ink-2);cursor:pointer;}
+.prog-opt:hover{border-color:var(--purple-mid);}
+.prog-opt.active{background:var(--purple-light);border-color:var(--purple);color:var(--purple);}
+.prog-preview{width:40px;height:5px;border-radius:3px;overflow:hidden;background:var(--line);}
+.prog-fill{height:100%;width:60%;border-radius:3px;}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.color-dot{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;}
+.color-dot:hover{transform:scale(1.1);}
+.color-dot.active{border-color:var(--ink);}
+.pts-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px;}
+.pts-table th{text-align:left;padding:8px 10px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-3);border-bottom:1px solid var(--line);}
+.pts-table td{padding:8px 10px;border-bottom:1px solid var(--line);}
+.pts-table tr:last-child td{border-bottom:none;}
+.pts-input{width:60px;border:1px solid var(--line);border-radius:5px;padding:4px 8px;font-size:13px;text-align:center;font-family:var(--sans);outline:none;}
+.pts-input:focus{border-color:var(--purple);}
+.badge-row{display:flex;gap:10px;flex-wrap:wrap;}
+.badge-card{border:1px solid var(--line);border-radius:8px;padding:12px 16px;flex:1;min-width:100px;text-align:center;}
+.badge-icon{font-size:28px;margin-bottom:6px;}
+.badge-name{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:2px;}
+.badge-rule{font-size:11px;color:var(--ink-3);line-height:1.4;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);}
+.toggle-row:last-child{border-bottom:none;}
+.tr-title{font-size:13px;font-weight:500;color:var(--ink);}
+.tr-desc{font-size:12px;color:var(--ink-2);margin-top:2px;}
+.dash-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;}
+.dash-opt{border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.dash-opt.disabled{opacity:0.4;}
+.dash-opt-title{font-size:12px;font-weight:500;color:var(--ink);}
+.dash-opt-sub{font-size:11px;color:var(--ink-3);margin-top:1px;}
+.sub-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-3);margin-bottom:8px;margin-top:14px;}
+.sub-label:first-child{margin-top:0;}
+.voucher-row{display:flex;gap:8px;margin-top:10px;}
+.voucher-input{flex:1;border:1px solid var(--line);border-radius:7px;padding:9px 12px;font-size:13px;font-family:var(--sans);outline:none;background:var(--hover);}
+.voucher-input:focus{border-color:var(--purple);background:#fff;}
+.save-btn{padding:10px 28px;background:var(--purple);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans);}
+.save-btn:hover{opacity:0.85;}
+.save-toast{display:inline-flex;align-items:center;gap:6px;margin-left:12px;font-size:12px;color:var(--green);opacity:0;transition:opacity 0.3s;}
+.save-toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="brand">Feedora</a>
+    <span class="survey-name">{{ survey.title }}</span>
+  </div>
+  <div class="topbar-centre">
+    <a href="{% url 'edit_survey' survey.access_uuid %}" class="topbar-tab">Build</a>
+    <!--check why survey builder isn't working-->
+    <span class="topbar-tab active">Add features</span>
+  </div>
+  <div class="topbar-right">
+    <span class="status-pill {% if not survey.is_active %}status-closed{% elif survey.is_draft %}status-draft{% else %}status-published{% endif %}" id="statusPill">
+      {% if not survey.is_active %}Closed{% elif survey.is_draft %}Draft{% else %}Published{% endif %}
+    </span>
+    <!-- <a href="{% url 'survey_dashboard' survey.access_uuid %}" class="btn-outline">← Dashboard</a> -->
+    {% if survey.is_draft %}<button class="btn-publish" onclick="saveFeatures(true)">Publish</button>{% endif %}
+  </div>
+</header>
+<div class="outer">
+  <nav class="sidebar">
+    <div class="sidebar-group-title">Gamification</div>
+    <button class="nav-item active" data-target="mascot" onclick="showPanel('mascot',this)"><div class="nav-dot"></div> Virtual mascot</button>
+    <button class="nav-item" data-target="progress" onclick="showPanel('progress',this)"><div class="nav-dot"></div> Progress bar</button>
+    <button class="nav-item" data-target="points" onclick="showPanel('points',this)"><div class="nav-dot"></div> Points allocation</button>
+    <button class="nav-item" data-target="badges" onclick="showPanel('badges',this)"><div class="nav-dot"></div> Badges &amp; rewards</button>
+    <div class="sidebar-group-title">Responses</div>
+    <button class="nav-item" data-target="collection" onclick="showPanel('collection',this)"><div class="nav-dot"></div> Collection settings</button>
+    <div class="sidebar-group-title">Dashboard</div>
+    <button class="nav-item" data-target="dashsettings" onclick="showPanel('dashsettings',this)"><div class="nav-dot"></div> Dashboard settings</button>
+  </nav>
+  <main class="main">
+    {% if not survey.is_draft %}
+    <div class="lock-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      This survey is published. You can still adjust features — changes take effect immediately.
+    </div>
+    {% endif %}
+    <!-- MASCOT -->
+    <div class="section-panel active" id="panel-mascot">
+      <h1 class="panel-title">Virtual mascot</h1>
+      <p class="panel-desc">Add a virtual mascot that sends encouraging messages to boost respondent engagement.</p>
+      <div class="feat-card" id="card-mascot">
+        <div class="feat-card-header has-body">
+          <div><div class="feat-card-title">Enable virtual mascot</div><div class="feat-card-desc">A character that guides and encourages respondents</div></div>
+          <div class="toggle" id="toggle-mascot" onclick="toggleFeature('mascot',this)"></div>
+        </div>
+        <div class="feat-body" id="body-mascot">
+          <div class="sub-label">Choose your mascot</div>
+          <div class="mascot-grid">
+            <div class="mascot-opt selected" data-mascot="mochi" onclick="selectMascot(this)">
+              <div class="mascot-face">🐱</div><div class="mascot-name">Nicki</div>
+              <div class="mascot-sel" style="font-size:11px;color:var(--purple);margin-top:2px;">Selected</div>
+            </div>
+            <div class="mascot-opt coming"><div class="mascot-face"></div><div class="mascot-name">Kato</div><div class="coming-tag">Coming soon</div></div>
+            <div class="mascot-opt coming"><div class="mascot-face"></div><div class="mascot-name">Beep</div><div class="coming-tag">Coming soon</div></div>
+          </div>
+          <div class="sub-label">Position on form</div>
+          <div class="pos-grid" id="posGrid">
+            <div class="pos-btn" onclick="setPos(this,'top-left')">Top left</div>
+            <div class="pos-btn" onclick="setPos(this,'top-right')">Top right</div>
+            <div class="pos-btn active" onclick="setPos(this,'bottom-left')">Bottom left</div>
+            <div class="pos-btn" onclick="setPos(this,'bottom-right')">Bottom right</div>
+          </div>
+          <div class="sub-label" style="margin-top:16px;">Messages</div>
+          <div class="msg-list">
+            <div class="msg-row"><div class="msg-trigger">On entry</div>"Hey guys! Let's get started 🎉"</div>
+            <div class="msg-row"><div class="msg-trigger">Halfway through</div>"You're halfway there — Don't give up now!"</div>
+            <div class="msg-row"><div class="msg-trigger">Attempting to leave</div>Custom pop-up with mascot face — "Are you sure you want to leave?"</div>
+            <div class="msg-row"><div class="msg-trigger">On completion (thank you page)</div>"Thank you for your co-operation! Have a nice day! 🌟"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- PROGRESS BAR -->
+    <div class="section-panel" id="panel-progress">
+      <h1 class="panel-title">Progress bar</h1>
+      <p class="panel-desc">Customise the progress bar at the top of your response form.</p>
+      <div class="feat-card" id="card-progress">
+        <div class="feat-card-header has-body">
+          <div><div class="feat-card-title">Show progress bar</div><div class="feat-card-desc">Respondents can see how far through the form they are</div></div>
+          <div class="toggle" id="toggle-progress" onclick="toggleFeature('progress',this)"></div>
+        </div>
+        <div class="feat-body" id="body-progress">
+          <div class="sub-label">Style</div>
+          <div class="prog-opts" id="progStyleOpts">
+            <div class="prog-opt active" onclick="setProg(this,'solid')"><div class="prog-preview"><div class="prog-fill" style="background:#7A4FA8;"></div></div>Solid</div>
+            <div class="prog-opt" onclick="setProg(this,'striped')"><div class="prog-preview" style="background:repeating-linear-gradient(90deg,#7A4FA8 0,#7A4FA8 5px,transparent 5px,transparent 9px);height:5px;width:40px;border-radius:3px;"></div>Striped</div>
+            <div class="prog-opt" onclick="setProg(this,'gradient')"><div class="prog-preview"><div class="prog-fill" style="background:linear-gradient(90deg,#b197fc,#7A4FA8);"></div></div>Gradient</div>
+          </div>
+          <div class="sub-label">Colour</div>
+          <div class="color-row" id="progColorRow">
+            <div class="color-dot active" style="background:#7A4FA8;" data-color="#7A4FA8" onclick="setProgColor(this)"></div>
+            <div class="color-dot" style="background:#14140f;" data-color="#14140f" onclick="setProgColor(this)"></div>
+            <div class="color-dot" style="background:#1D9E75;" data-color="#1D9E75" onclick="setProgColor(this)"></div>
+            <div class="color-dot" style="background:#1F4D8F;" data-color="#1F4D8F" onclick="setProgColor(this)"></div>
+            <div class="color-dot" style="background:#D85A30;" data-color="#D85A30" onclick="setProgColor(this)"></div>
+          </div>
+          <div class="sub-label">Label</div>
+          <div class="prog-opts" id="progLabelOpts">
+            <div class="prog-opt active" onclick="setProgLabel(this,'percent')">Percentage (60%)</div>
+            <div class="prog-opt" onclick="setProgLabel(this,'count')">Count (3 / 5)</div>
+            <div class="prog-opt" onclick="setProgLabel(this,'none')">None</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- POINTS -->
+    <div class="section-panel" id="panel-points">
+      <h1 class="panel-title">Points allocation</h1>
+      <p class="panel-desc">Set how many points respondents earn per question type.</p>
+      <div class="feat-card" id="card-points">
+        <div class="feat-card-header has-body">
+          <div><div class="feat-card-title">Enable points system</div><div class="feat-card-desc">Respondents earn points as they answer — shown on thank you page</div></div>
+          <div class="toggle" id="toggle-points" onclick="toggleFeature('points',this)"></div>
+        </div>
+        <div class="feat-body" id="body-points">
+          <table class="pts-table">
+            <thead><tr><th>Question type</th><th>Points</th></tr></thead>
+            <tbody>
+              <tr><td>Likert / Rating</td><td><input class="pts-input" id="pts-likert" value="10" type="number" min="0" max="100"></td></tr>
+              <tr><td>Multiple choice</td><td><input class="pts-input" id="pts-mcq" value="10" type="number" min="0" max="100"></td></tr>
+              <tr><td>Checkbox / Dropdown</td><td><input class="pts-input" id="pts-checkbox" value="10" type="number" min="0" max="100"></td></tr>
+              <tr><td>Short answer</td><td><input class="pts-input" id="pts-short" value="10" type="number" min="0" max="100"></td></tr>
+              <tr><td>Paragraph (&gt;20 chars)</td><td><input class="pts-input" id="pts-open" value="20" type="number" min="0" max="100"></td></tr>
+              <tr><td>Date</td><td><input class="pts-input" id="pts-date" value="5" type="number" min="0" max="100"></td></tr>
+              <tr><td>File upload</td><td><input class="pts-input" id="pts-file" value="15" type="number" min="0" max="100"></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- BADGES -->
+    <div class="section-panel" id="panel-badges">
+      <h1 class="panel-title">Badges &amp; rewards</h1>
+      <p class="panel-desc">Registered respondents earn badges for participation.</p>
+      <div class="feat-card" id="card-badges">
+        <div class="feat-card-header has-body">
+          <div><div class="feat-card-title">Badge allocation</div><div class="feat-card-desc">Awarded to registered respondents based on total participation</div></div>
+          <div class="toggle" id="toggle-badges" onclick="toggleFeature('badges',this)"></div>
+        </div>
+        <div class="feat-body" id="body-badges">
+          <div class="badge-row">
+            <div class="badge-card"><div class="badge-icon">🥉</div><div class="badge-name">Bronze</div><div class="badge-rule">First-time respondent</div></div>
+            <div class="badge-card"><div class="badge-icon">🥈</div><div class="badge-name">Silver</div><div class="badge-rule">5 responses total</div></div>
+            <div class="badge-card"><div class="badge-icon">🥇</div><div class="badge-name">Gold</div><div class="badge-rule">More than 5 responses</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="feat-card" id="card-voucher">
+        <div class="feat-card-header has-body">
+          <div><div class="feat-card-title">Gift card / e-voucher</div><div class="feat-card-desc">Send a promotion code after completing the form</div></div>
+          <div class="toggle" id="toggle-voucher" onclick="toggleFeature('voucher',this)"></div>
+        </div>
+        <div class="feat-body" id="body-voucher">
+          <div class="voucher-row">
+            <input class="voucher-input" id="voucherCode" placeholder="Voucher code (e.g. THANKS20)" type="text">
+            <input class="voucher-input" id="voucherDiscount" placeholder="Discount %" type="number" min="1" max="100" style="max-width:130px;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- COLLECTION -->
+    <div class="section-panel" id="panel-collection">
+      <h1 class="panel-title">How responses are collected</h1>
+      <p class="panel-desc">Control who can respond and what information is gathered.</p>
+      <div class="feat-card">
+        <div class="toggle-row"><div><div class="tr-title">Collect email address</div><div class="tr-desc">Ask respondents to provide their email</div></div><div class="toggle" id="toggle-email" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div class="tr-title">Save copy to respondent account</div><div class="tr-desc">Registered users can view their own responses</div></div><div class="toggle" id="toggle-savecopy" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div class="tr-title">Email copy to respondent</div><div class="tr-desc">Send a summary of answers after submission</div></div><div class="toggle" id="toggle-emailcopy" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div class="tr-title">Limit to 1 response per user</div><div class="tr-desc">Registered users can only submit once</div></div><div class="toggle" id="toggle-limit" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row">
+          <div><div class="tr-title">Accept responses</div><div class="tr-desc">Turn off to close the survey to new submissions</div></div>
+          <div class="toggle on" id="toggle-accept" onclick="this.classList.toggle('on');updateAcceptStatus(this)"></div>
+        </div>
+      </div>
+    </div>
+    <!-- DASHBOARD SETTINGS -->
+    <div class="section-panel" id="panel-dashsettings">
+      <h1 class="panel-title">Dashboard settings</h1>
+      <p class="panel-desc">Choose which cards appear on your analytics dashboard.</p>
+      <div class="feat-card">
+        <div class="toggle-row" style="margin-bottom:4px;">
+          <div><div class="tr-title">Enable default dashboard</div><div class="tr-desc">Show analytics overview when you open a survey</div></div>
+          <div class="toggle on" id="toggle-dashmaster" onclick="toggleDashMaster(this)"></div>
+        </div>
+        <div id="dashCardOpts">
+          <div class="sub-label">Visible cards</div>
+          <div class="dash-opts">
+            <div class="dash-opt" id="dopt-alpha"><div><div class="dash-opt-title">Cronbach's alpha</div><div class="dash-opt-sub">Reliability score</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleDashOpt('alpha',this)"></div></div>
+            {% if survey.is_hmsam %}<div class="dash-opt" id="dopt-hmsam"><div><div class="dash-opt-title">HMSAM score</div><div class="dash-opt-sub">HMSAM surveys only</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleDashOpt('hmsam',this)"></div></div>{% endif %}
+            <div class="dash-opt" id="dopt-responses"><div><div class="dash-opt-title">Response count</div><div class="dash-opt-sub">Total submissions</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleDashOpt('responses',this)"></div></div>
+            <div class="dash-opt" id="dopt-leaderboard"><div><div class="dash-opt-title">Leaderboard</div><div class="dash-opt-sub">Top respondents</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleDashOpt('leaderboard',this)"></div></div>
+            <div class="dash-opt" id="dopt-byquestion"><div><div class="dash-opt-title">By Question</div><div class="dash-opt-sub">Bar chart summary</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleDashOpt('byquestion',this)"></div></div>
+            <div class="dash-opt" id="dopt-individual"><div><div class="dash-opt-title">Individual response</div><div class="dash-opt-sub">Per-respondent answers</div></div><div class="toggle on" onclick="this.classList.toggle('on');toggleDashOpt('individual',this)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:24px;display:flex;align-items:center;gap:12px;">
+      <button class="save-btn" onclick="saveFeatures(false)">Save</button>
+      {% if survey.is_draft %}<button class="save-btn" style="background:#14140f;" onclick="saveFeatures(true)">Publish survey</button>{% endif %}
+      <span class="save-toast" id="saveToast">✓ Features saved</span>
+    </div>
+  </main>
+</div>
+<script id="savedFeatures" type="application/json">{{ features_json|default:'{}'|safe }}</script>
+<script>
+const SURVEY_UUID='{{ survey.access_uuid }}';
+const CSRF_TOKEN='{{ csrf_token }}';
+const IS_DRAFT={{ survey.is_draft|yesno:'true,false' }};
+const DEFAULTS={
+  mascot:{enabled:false,name:'mochi',position:'bottom-left'},
+  progress:{enabled:false,style:'solid',color:'#7A4FA8',label:'percent'},
+  points:{enabled:false,values:{likert:10,mcq:10,checkbox:10,short:10,open:20,date:5,file:15}},
+  badges:{enabled:false},voucher:{enabled:false,code:'',discount:''},
+  collection:{email:false,savecopy:false,emailcopy:false,limit:false,accept:true},
+  dashboard:{enabled:true,alpha:true,hmsam:true,responses:true,leaderboard:true,byquestion:true,individual:true},
+};
+const saved=JSON.parse(document.getElementById('savedFeatures').textContent||'{}');
+let state={};
+for(const k in DEFAULTS)state[k]=Object.assign({},DEFAULTS[k],saved[k]||{});
+document.addEventListener('DOMContentLoaded',applyStateToUI);
+function applyStateToUI(){
+  applyToggle('toggle-mascot','card-mascot',state.mascot.enabled);
+  document.querySelectorAll('.pos-btn').forEach(b=>{const m=b.getAttribute('onclick')?.match(/'([^']+)'/);if(m)b.classList.toggle('active',m[1]===state.mascot.position);});
+  applyToggle('toggle-progress','card-progress',state.progress.enabled);
+  setOpt('#progStyleOpts',state.progress.style);
+  document.querySelectorAll('#progColorRow .color-dot').forEach(d=>d.classList.toggle('active',d.dataset.color===state.progress.color));
+  setOpt('#progLabelOpts',state.progress.label);
+  applyToggle('toggle-points','card-points',state.points.enabled);
+  const pv=state.points.values||{};
+  ['likert','mcq','checkbox','short','open','date','file'].forEach(k=>{const el=document.getElementById('pts-'+k);if(el&&pv[k]!==undefined)el.value=pv[k];});
+  applyToggle('toggle-badges','card-badges',state.badges.enabled);
+  applyToggle('toggle-voucher','card-voucher',state.voucher.enabled);
+  setVal('voucherCode',state.voucher.code||'');setVal('voucherDiscount',state.voucher.discount||'');
+  const c=state.collection;
+  setTog('toggle-email',c.email);setTog('toggle-savecopy',c.savecopy);
+  setTog('toggle-emailcopy',c.emailcopy);setTog('toggle-limit',c.limit);
+  setTog('toggle-accept',c.accept!==false);
+  updateAcceptStatus(document.getElementById('toggle-accept'));
+  const d=state.dashboard;
+  setTog('toggle-dashmaster',d.enabled!==false);
+  ['alpha','hmsam','responses','leaderboard','byquestion','individual'].forEach(k=>{
+    const opt=document.getElementById('dopt-'+k);if(!opt)return;
+    const tog=opt.querySelector('.toggle');if(tog)setTogEl(tog,d[k]!==false);
+    opt.classList.toggle('disabled',d.enabled===false);
+  });
+  updateNavDots();
+}
+function applyToggle(tid,cid,on){const t=document.getElementById(tid),c=document.getElementById(cid);if(t)setTogEl(t,on);if(c)c.classList.toggle('enabled',on);}
+function setOpt(sel,val){document.querySelectorAll(sel+' .prog-opt').forEach(b=>{const m=b.getAttribute('onclick')?.match(/'([^']+)'/);if(m)b.classList.toggle('active',m[1]===val);});}
+function setTog(id,on){const e=document.getElementById(id);if(e)setTogEl(e,on);}
+function setTogEl(el,on){el.classList.toggle('on',!!on);}
+function setVal(id,v){const e=document.getElementById(id);if(e)e.value=v;}
+function updateNavDots(){['mascot','progress','points','badges','voucher'].forEach(k=>{const n=document.querySelector('.nav-item[data-target="'+k+'"]');if(n)n.classList.toggle('feat-on',!!(state[k]?.enabled));});}
+function showPanel(id,el){document.querySelectorAll('.section-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');el.classList.add('active');}
+function toggleFeature(id,el){el.classList.toggle('on');const on=el.classList.contains('on');document.getElementById('card-'+id)?.classList.toggle('enabled',on);document.querySelector('.nav-item[data-target="'+id+'"]')?.classList.toggle('feat-on',on);state[id]=state[id]||{};state[id].enabled=on;}
+function selectMascot(el){if(el.classList.contains('coming'))return;document.querySelectorAll('.mascot-opt').forEach(o=>{o.classList.remove('selected');const s=o.querySelector('.mascot-sel');if(s)s.textContent='';});el.classList.add('selected');const s=el.querySelector('.mascot-sel');if(s)s.textContent='Selected';state.mascot.name=el.dataset.mascot;}
+function setPos(el,pos){document.querySelectorAll('.pos-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');state.mascot.position=pos;}
+function setProg(el,style){el.closest('.prog-opts').querySelectorAll('.prog-opt').forEach(b=>b.classList.remove('active'));el.classList.add('active');state.progress.style=style;}
+function setProgColor(el){document.querySelectorAll('#progColorRow .color-dot').forEach(d=>d.classList.remove('active'));el.classList.add('active');state.progress.color=el.dataset.color;}
+function setProgLabel(el,val){el.closest('.prog-opts').querySelectorAll('.prog-opt').forEach(b=>b.classList.remove('active'));el.classList.add('active');state.progress.label=val;}
+function toggleDashMaster(el){el.classList.toggle('on');const on=el.classList.contains('on');document.querySelectorAll('#dashCardOpts .dash-opt').forEach(d=>d.classList.toggle('disabled',!on));state.dashboard.enabled=on;}
+function toggleDashOpt(key,el){state.dashboard[key]=el.classList.contains('on');}
+function updateAcceptStatus(el){
+  const pill=document.getElementById('statusPill');if(!pill)return;
+  const accepting=el.classList.contains('on');
+  if(!accepting){pill.textContent='Closed';pill.className='status-pill status-closed';}
+  else{pill.textContent=IS_DRAFT?'Draft':'Published';pill.className='status-pill '+(IS_DRAFT?'status-draft':'status-published');}
+}
+async function saveFeatures(publish=false){
+  state.points.values={likert:parseInt(document.getElementById('pts-likert')?.value)||10,mcq:parseInt(document.getElementById('pts-mcq')?.value)||10,checkbox:parseInt(document.getElementById('pts-checkbox')?.value)||10,short:parseInt(document.getElementById('pts-short')?.value)||10,open:parseInt(document.getElementById('pts-open')?.value)||20,date:parseInt(document.getElementById('pts-date')?.value)||5,file:parseInt(document.getElementById('pts-file')?.value)||15};
+  state.voucher.code=document.getElementById('voucherCode')?.value||'';
+  state.voucher.discount=document.getElementById('voucherDiscount')?.value||'';
+  state.collection={email:document.getElementById('toggle-email')?.classList.contains('on')||false,savecopy:document.getElementById('toggle-savecopy')?.classList.contains('on')||false,emailcopy:document.getElementById('toggle-emailcopy')?.classList.contains('on')||false,limit:document.getElementById('toggle-limit')?.classList.contains('on')||false,accept:document.getElementById('toggle-accept')?.classList.contains('on')!==false};
+  try{
+    const res=await fetch('/surveys/'+SURVEY_UUID+'/features/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN},body:JSON.stringify({action:publish?'publish':'save',features:state})});
+    const data=await res.json();
+    if(data.redirect){window.location.href=data.redirect;}
+    else if(res.ok){const t=document.getElementById('saveToast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);updateNavDots();updateAcceptStatus(document.getElementById('toggle-accept'));}
+  }catch(err){console.error(err);}
+}
+</script>
+</body>
+</html>

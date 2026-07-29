@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Preview — Feedora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;--line:#e8e8e0;--surface:#fff;--hover:#f4f4ee;--sans:'Inter',system-ui,sans-serif;--serif:'Instrument Serif',Georgia,serif;--accent:#14140f;--bg:#fafaf7;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);font-size:15px;color:var(--ink);background:var(--bg);min-height:100vh;-webkit-font-smoothing:antialiased;}
+.preview-bar{background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:10px 24px;position:sticky;top:0;z-index:100;}
+.preview-bar-left{display:flex;align-items:center;gap:10px;font-size:13px;}
+.preview-badge{background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:500;}
+.preview-close-btn{padding:6px 14px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:6px;color:#fff;font-size:13px;font-weight:500;cursor:pointer;}
+.preview-close-btn:hover{background:rgba(255,255,255,0.25);}
+.page{max-width:680px;margin:36px auto;padding:0 20px 80px;}
+.header-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;border-top:6px solid var(--accent);padding:32px 32px 28px;margin-bottom:16px;}
+.form-title{font-family:var(--serif);font-size:30px;font-weight:400;color:var(--ink);line-height:1.2;margin-bottom:10px;}
+.form-desc{font-size:14px;color:var(--ink-2);line-height:1.6;}
+.section-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;border-left:4px solid var(--accent);padding:18px 24px;margin-bottom:12px;margin-top:8px;}
+.section-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-3);margin-bottom:6px;}
+.section-ttl{font-size:18px;font-weight:500;color:var(--ink);}
+.section-dsc{font-size:13px;color:var(--ink-2);margin-top:4px;}
+.q-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:24px 28px;margin-bottom:12px;}
+.q-label{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:14px;line-height:1.4;}
+.q-label .req{color:#dc2626;margin-left:3px;}
+.likert-wrap{overflow-x:auto;}
+.likert-table{width:100%;border-collapse:collapse;min-width:380px;}
+.likert-table th{font-size:11px;font-weight:500;color:var(--ink-2);text-align:center;padding:6px 4px;border-bottom:1px solid var(--line);}
+.likert-table td{text-align:center;padding:10px 4px;}
+.likert-table input[type="radio"]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;}
+.text-input{width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:7px;font-size:14px;color:var(--ink);font-family:var(--sans);outline:none;transition:border-color 0.15s;background:var(--hover);}
+.text-input:focus{border-color:var(--accent);background:#fff;}
+textarea.text-input{resize:vertical;min-height:80px;}
+.opt-list{display:flex;flex-direction:column;gap:8px;}
+.opt-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:7px;cursor:pointer;transition:all 0.15s;}
+.opt-item:hover{border-color:var(--ink-3);background:var(--hover);}
+.opt-item input{width:17px;height:17px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
+.opt-item span{font-size:14px;color:var(--ink);flex:1;}
+.opt-item.checked{border-color:var(--accent);background:#f0f0ea;}
+.q-select{width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:7px;font-size:14px;color:var(--ink);font-family:var(--sans);outline:none;background:var(--hover);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b62' stroke-width='2.5'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.rating-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.rating-star{font-size:32px;cursor:pointer;color:#d0cfc7;transition:color 0.1s,transform 0.1s;user-select:none;}
+.rating-star:hover,.rating-star.active{color:#f59e0b;}
+.rating-star:hover{transform:scale(1.1);}
+.rating-lbl{font-size:13px;color:var(--ink-3);margin-left:6px;}
+.numeric-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+.numeric-cell{min-width:40px;height:40px;border:1px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--ink-2);cursor:pointer;transition:all 0.15s;padding:0 8px;}
+.numeric-cell:hover{border-color:var(--accent);color:var(--accent);}
+.numeric-cell.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.date-input{padding:10px 14px;border:1px solid var(--line);border-radius:7px;font-size:14px;color:var(--ink);font-family:var(--sans);outline:none;background:var(--hover);}
+.file-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed var(--line);border-radius:8px;padding:32px 20px;text-align:center;cursor:pointer;transition:all 0.15s;background:var(--hover);width:100%;}
+.file-zone:hover{border-color:var(--accent);background:#fff;}
+.file-zone.has-file{border-color:var(--accent);border-style:solid;background:#fff;}
+.file-zone input{display:none;}
+.file-zone-text{font-size:14px;color:var(--ink-2);font-weight:500;}
+.file-zone-hint{font-size:12px;color:var(--ink-3);margin-top:4px;}
+.file-chosen-lbl{font-size:13px;color:var(--accent);margin-top:8px;font-weight:500;}
+.submit-row{display:flex;justify-content:flex-start;margin-top:24px;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--ink-3);}
+.empty-state h2{font-family:var(--serif);font-size:24px;font-weight:400;color:var(--ink);margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="preview-bar">
+  <div class="preview-bar-left">
+    <span style="font-family:'Instrument Serif',serif;font-size:18px;font-style:italic;">Feedora</span>
+    <span class="preview-badge">Preview mode</span>
+    <span style="opacity:0.6;font-size:12px;">Changes are not saved in this view</span>
+  </div>
+  <div><button class="preview-close-btn" onclick="window.close()">✕ Close preview</button></div>
+</div>
+<div class="page" id="page">
+  <div class="empty-state" id="emptyState">
+    <h2>No preview data found</h2>
+    <p>Open the survey builder and click the eye icon to preview.</p>
+  </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const raw = sessionStorage.getItem('feedora_preview');
+  if (!raw) return;
+  let data;
+  try { data = JSON.parse(raw); } catch(e){ return; }
+
+  document.documentElement.style.setProperty('--accent', data.accent||'#14140f');
+  document.body.style.background = data.bg||'#fafaf7';
+
+  const btnColor  = data.btnColor   || '#14140f';
+  const btnRadius = data.btnRadius  || '6';
+  const btnPad    = data.btnPadding  || '11px 28px';
+  const btnFs     = data.btnFontSize || '15px';
+
+  const page = document.getElementById('page');
+  page.innerHTML = '';
+
+  // Header card
+  const hc = document.createElement('div');
+  hc.className = 'header-card';
+  hc.style.borderTopColor = data.accent||'#14140f';
+  hc.innerHTML =
+    (data.headerImage
+      ? `<div style="width:100%;height:180px;border-radius:6px;overflow:hidden;margin-bottom:18px;">
+           <img src="${data.headerImage}" style="width:100%;height:100%;object-fit:cover;display:block;" alt="">
+         </div>` : '') +
+    `<div class="form-title">${esc(data.title||'Untitled Survey')}</div>` +
+    (data.description ? `<div class="form-desc">${esc(data.description)}</div>` : '');
+  page.appendChild(hc);
+
+  // Build section map: id → {title, desc, sectionNumber}
+  const sectionMap = {};
+  (data.sections||[]).forEach((s,i) => {
+    sectionMap[s.id] = { ...s, idx: i };
+  });
+
+  
+  const renderedSections = new Set();
+
+  (data.questions||[]).forEach((q,qi) => {
+    const secId = q.sectionId || 's0';
+    const sec   = sectionMap[secId];
+
+    // Show section card for every section when there are 2+ sections
+    // Skip only if it's the single default empty section
+    if (sec && !renderedSections.has(secId) && (data.sections.length > 1 || sec.title)) {
+    renderedSections.add(secId);
+    const sc = document.createElement('div');
+    sc.className = 'section-card';
+    sc.style.borderLeftColor = data.accent || '#14140f';
+    sc.innerHTML =
+        `<div class="section-lbl">Section ${sec.idx + 1}</div>` +
+        `<div class="section-ttl">${esc(sec.title || 'Untitled Section')}</div>` +
+        (sec.desc ? `<div class="section-dsc">${esc(sec.desc)}</div>` : '');
+    page.appendChild(sc);
+    }
+
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    const req  = q.required ? `<span class="req">*</span>` : '';
+    const code = q.code ? `<span style="font-size:12px;color:#a3a39a;margin-right:6px;">${esc(q.code)}</span>` : '';
+    card.innerHTML =
+      `<div class="q-label">${code}${esc(q.text||'Question '+(qi+1))}${req}</div>` +
+      `<div class="q-answer" id="qa-${qi}"></div>`;
+    page.appendChild(card);
+
+    const ans = card.querySelector(`#qa-${qi}`);
+    ans.innerHTML = buildUI(q, qi);
+    bindEv(ans, qi);
+  });
+
+  // Submit with saved button styling
+  const subRow = document.createElement('div');
+  subRow.className = 'submit-row';
+  subRow.innerHTML = `<button onclick="previewSubmit()"
+    style="background:${esc(btnColor)};color:#fff;border:none;
+           border-radius:${esc(btnRadius)}px;padding:${esc(btnPad)};
+           font-size:${esc(btnFs)};font-weight:500;cursor:pointer;
+           font-family:'Inter',sans-serif;transition:opacity 0.15s;"
+    onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+    ${esc(data.submitLabel||'Submit')}
+  </button>`;
+  page.appendChild(subRow);
+
+  document.getElementById('emptyState')?.remove();
+});
+
+function buildUI(q,qi){
+  const n=qi;
+  switch(q.type){
+    case 'likert':{
+      const labs=['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'];
+      return `<div class="likert-wrap"><table class="likert-table">
+        <thead><tr>${labs.map(l=>`<th>${esc(l)}</th>`).join('')}</tr></thead>
+        <tbody><tr>${labs.map((_,li)=>`<td><input type="radio" name="q${n}" value="${li+1}"></td>`).join('')}</tr></tbody>
+      </table></div>`;
+    }
+    case 'short': return `<input class="text-input" type="text" placeholder="Your answer">`;
+    case 'open':  return `<textarea class="text-input" placeholder="Your answer" rows="3"></textarea>`;
+    case 'mcq':{
+      const items=(q.options||['Option 1']).map((o,oi)=>
+        `<div class="opt-item" onclick="selOpt(this,'q${n}','radio')">
+           <input type="radio" name="q${n}" value="${oi}" onclick="event.stopPropagation()">
+           <span>${esc(o)}</span></div>`).join('');
+      return `<div class="opt-list">${items}</div>`;
+    }
+    case 'checkbox':{
+      const items=(q.options||['Option 1']).map((o,oi)=>
+        `<div class="opt-item" onclick="selOpt(this,'q${n}','checkbox')">
+           <input type="checkbox" name="q${n}" value="${oi}" onclick="event.stopPropagation()">
+           <span>${esc(o)}</span></div>`).join('');
+      return `<div class="opt-list">${items}</div>`;
+    }
+    case 'dropdown':{
+      const opts=(q.options||['Option 1']).map((o,oi)=>
+        `<option value="${oi}">${esc(o)}</option>`).join('');
+      return `<select class="q-select"><option value="">Choose an option</option>${opts}</select>`;
+    }
+    case 'rating':{
+      const style=q.ratingStyle||'stars';
+      const max=parseInt(q.ratingMax)||5;
+      if(style==='numeric'){
+        const cells=Array.from({length:max},(_,i)=>
+          `<div class="numeric-cell" data-val="${i+1}" onclick="selNumeric(this)">${i+1}</div>`).join('');
+        return `<div class="numeric-wrap">${cells}</div>`;
+      } else if(style==='likert'){
+        const labs=['Strongly Disagree','Disagree','Neutral','Agree','Strongly Agree'];
+        return `<div class="likert-wrap"><table class="likert-table">
+          <thead><tr>${labs.map(l=>`<th>${esc(l)}</th>`).join('')}</tr></thead>
+          <tbody><tr>${labs.map((_,li)=>`<td><input type="radio" name="q${n}" value="${li+1}"></td>`).join('')}</tr></tbody>
+        </table></div>`;
+      } else {
+        const stars=Array.from({length:max},(_,i)=>
+          `<span class="rating-star" data-val="${i+1}">★</span>`).join('');
+        return `<div class="rating-wrap" id="rw-${qi}" data-selected="0">
+          ${stars}<span class="rating-lbl" id="rl-${qi}">Select a rating</span>
+        </div>`;
+      }
+    }
+    case 'date': return `<input class="date-input" type="date">`;
+    case 'file':
+      return `<div class="file-zone" id="fz-${qi}" onclick="document.getElementById('fi-${qi}').click()">
+        <div style="margin-bottom:10px;color:#a3a39a;">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div class="file-zone-text">Click to upload a file</div>
+        <div class="file-zone-hint">Any file type accepted</div>
+        <div class="file-chosen-lbl" id="fcl-${qi}"></div>
+        <input type="file" id="fi-${qi}" onclick="event.stopPropagation()">
+      </div>`;
+    default: return `<div style="color:#a3a39a;font-size:13px;">(${esc(q.type)} type)</div>`;
+  }
+}
+function bindEv(ans,qi){
+  const rw=document.getElementById('rw-'+qi);
+  if(rw){
+    const stars=rw.querySelectorAll('.rating-star');
+    const lbl=document.getElementById('rl-'+qi);
+    const lbls=['','Poor','Fair','Good','Very good','Excellent'];
+    stars.forEach((s,i)=>{
+      s.addEventListener('mouseover',()=>stars.forEach((x,j)=>x.classList.toggle('active',j<=i)));
+      s.addEventListener('mouseout',()=>{
+        const sel=parseInt(rw.dataset.selected||'0');
+        stars.forEach((x,j)=>x.classList.toggle('active',j<sel));
+      });
+      s.addEventListener('click',()=>{
+        const v=i+1; rw.dataset.selected=v;
+        stars.forEach((x,j)=>x.classList.toggle('active',j<v));
+        if(lbl) lbl.textContent=lbls[v]||v+' stars';
+      });
+    });
+  }
+  const fi=document.getElementById('fi-'+qi);
+  if(fi){
+    fi.addEventListener('change',()=>{
+      const zone=document.getElementById('fz-'+qi);
+      const lbl=document.getElementById('fcl-'+qi);
+      if(fi.files[0]){if(lbl) lbl.textContent='✓ '+fi.files[0].name; if(zone) zone.classList.add('has-file');}
+    });
+  }
+}
+function selOpt(div,name,type){
+  const inp=div.querySelector('input'); if(!inp) return;
+  if(type==='radio'){
+    div.parentElement.querySelectorAll('.opt-item').forEach(d=>{
+      d.classList.remove('checked');
+      const r=d.querySelector('input[type="radio"]'); if(r) r.checked=false;
+    });
+    inp.checked=true; div.classList.add('checked');
+  } else { inp.checked=!inp.checked; div.classList.toggle('checked',inp.checked); }
+}
+function selNumeric(cell){
+  cell.parentElement.querySelectorAll('.numeric-cell').forEach(c=>c.classList.remove('active'));
+  cell.classList.add('active');
+}
+function previewSubmit(){ alert('This is a preview — responses are not submitted.'); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
+</body>
+</html>

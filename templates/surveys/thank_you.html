@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Thank you — {{ survey.title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% load static %}
+<style>
+:root{
+  --ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;
+  --line:#e8e8e0;--surface:#fff;--bg:#fafaf7;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+  --accent:{{ survey.theme_accent|default:'#14140f' }};
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);font-size:14px;color:var(--ink);
+     background:{{ survey.theme_bg|default:'#fafaf7' }};
+     min-height:100vh;display:flex;flex-direction:column;
+     align-items:center;justify-content:center;
+     -webkit-font-smoothing:antialiased;padding:20px;}
+
+.topbar{position:fixed;top:0;left:0;right:0;height:48px;
+        background:var(--surface);border-bottom:1px solid var(--line);
+        display:flex;align-items:center;padding:0 24px;}
+.brand{font-family:var(--serif);font-size:18px;color:var(--ink);text-decoration:none;}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+      border-top:6px solid var(--accent);padding:40px 40px 36px;
+      max-width:480px;width:100%;text-align:center;
+      box-shadow:0 4px 24px rgba(0,0,0,0.06);}
+
+.check-icon{width:56px;height:56px;border-radius:50%;
+            background:#dcfce7;display:flex;align-items:center;
+            justify-content:center;margin:0 auto 20px;}
+
+.thank-title{font-family:var(--serif);font-size:28px;font-weight:400;
+             color:var(--ink);margin-bottom:10px;}
+.thank-desc{font-size:14px;color:var(--ink-2);line-height:1.6;margin-bottom:24px;}
+
+.points-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--accent);color:#fff;
+  padding:10px 22px;border-radius:100px;
+  font-size:15px;font-weight:600;margin-bottom:28px;
+}
+
+/* FIX: Mascot on thank you page */
+.thankyou-mascot{
+  display:flex;flex-direction:column;align-items:center;
+  margin-bottom:28px;
+}
+.thankyou-mascot img{
+  width:130px;height:auto;
+  filter:drop-shadow(0 4px 16px rgba(0,0,0,0.15));
+  animation:bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes bounceIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+.thankyou-bubble{
+  margin-top:12px;background:#fff;border:2px solid #7A4FA8;
+  border-radius:16px;padding:12px 18px;font-size:14px;font-weight:600;
+  color:#1a1a2e;line-height:1.4;max-width:280px;text-align:center;
+  box-shadow:0 4px 16px rgba(122,79,168,0.15);
+  animation:fadeUp 0.5s 0.4s both;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+{% if survey.features.voucher.enabled and survey.features.voucher.code %}
+.voucher-card{background:#faf5ff;border:1px solid #d8d4f0;border-radius:10px;
+              padding:16px 20px;margin-bottom:20px;}
+.voucher-code{font-size:22px;font-weight:700;letter-spacing:3px;color:#7A4FA8;margin:6px 0;}
+.voucher-desc{font-size:12px;color:#6b6b62;}
+.copy-code-btn{padding:6px 14px;background:#7A4FA8;color:#fff;border:none;
+               border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px;}
+{% endif %}
+
+.done-btn{display:inline-block;padding:11px 28px;background:var(--ink);color:#fff;
+          text-decoration:none;border-radius:8px;font-size:14px;font-weight:500;
+          transition:opacity 0.15s;}
+.done-btn:hover{opacity:0.85;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="brand">Feedora</a>
+</div>
+
+<div class="card">
+
+  <!-- FIX: Show mascot thank you message on this page -->
+  {% if survey.features.mascot.enabled %}
+  <div class="thankyou-mascot">
+    <img src="{% static 'images/mascot/thank_you_cat.png' %}" alt="Thank you mascot">
+    <div class="thankyou-bubble">
+      Thank you for your co-operation!<br>Have a nice day! 🌟
+    </div>
+  </div>
+  {% else %}
+  <div class="check-icon">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+         stroke="#16a34a" stroke-width="2.5" stroke-linecap="round">
+      <polyline points="20,6 9,17 4,12"/>
+    </svg>
+  </div>
+  {% endif %}
+
+  <h1 class="thank-title">Response submitted!</h1>
+  <p class="thank-desc">
+    Thank you for completing <strong>{{ survey.title }}</strong>.
+    Your feedback helps make things better for everyone.
+  </p>
+
+  {% if points > 0 and survey.features.points.enabled %}
+  <div class="points-badge">
+    ⭐ You earned {{ points }} points!
+  </div>
+  {% endif %}
+
+  {% if survey.features.voucher.enabled and survey.features.voucher.code %}
+  <div class="voucher-card">
+    <div class="voucher-desc">Here's your reward voucher!:</div>
+    <div class="voucher-code" id="voucherCode">{{ survey.features.voucher.code }}</div>
+    {% if survey.features.voucher.discount %}
+    <div class="voucher-desc">{{ survey.features.voucher.discount }}% discount</div>
+    {% endif %}
+    <button class="copy-code-btn"
+            onclick="navigator.clipboard.writeText('{{ survey.features.voucher.code }}');
+                     this.textContent='Copied!';">
+      Copy code
+    </button>
+  </div>
+  {% endif %}
+
+  <a href="/surveys/access/" class="done-btn">Done</a>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Feedora</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+
+<div class="dashboard-page">
+  <nav class="dashboard-nav">
+    <a href="/" class="role-nav-logo">Feedora</a>
+  </nav>
+
+  <main class="dashboard-body">
+    <section class="dashboard-intro">
+      <h1 class="dashboard-title">Hi {{ request.user.first_name|default:request.user.username|default:'Gihini' }}!</h1>
+      <br>
+      <p class="dashboard-subtitle" style="color: #706c6c; font-family: 'DM Sans', system-ui, sans-serif;">
+        Welcome to the creator's page! <Br> 
+        What you want to do today?</p>
+    </section>
+
+    <section class="dashboard-cards">
+      <a href="{% url 'survey_type_select' %}" class="dashboard-card">
+        <h2>Create new survey</h2>
+        <p>Click here to create a new feedback survey</p>
+      </a>
+      <a href="{% url 'my_surveys' %}" class="dashboard-card">
+        <h2>My surveys</h2>
+        <p>Click here to get the latest updates of the surveys you created</p>
+      </a>
+      
+    </section>
+
+    <div class="dashboard-illustration" aria-hidden="true">
+      <img src="{% static 'images/combined_illustration.png' %}" alt="">
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

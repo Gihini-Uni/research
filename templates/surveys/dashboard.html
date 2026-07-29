@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{{ survey.title }} — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;
+  --line:#e8e8e0;--surface:#fff;--hover:#f4f4ee;--bg:#fafaf7;
+  --serif:'Instrument Serif',Georgia,serif;
+  --sans:'Inter',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);font-size:14px;color:var(--ink);
+     background:var(--bg);-webkit-font-smoothing:antialiased;}
+
+/* Topbar */
+.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--line);
+        display:flex;align-items:center;padding:0 24px;gap:16px;
+        position:sticky;top:0;z-index:100;}
+.brand{font-family:var(--serif);font-size:20px;color:var(--ink);text-decoration:none;}
+.topbar-right{margin-left:auto;display:flex;gap:8px;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;
+     border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;
+     text-decoration:none;border:none;transition:opacity 0.15s;}
+.btn-dark{background:var(--ink);color:#fff;}
+.btn-dark:hover{opacity:0.85;}
+.btn-outline{background:transparent;color:var(--ink);border:1px solid var(--line);}
+.btn-outline:hover{background:var(--hover);}
+
+/* Layout */
+.outer{display:flex;min-height:calc(100vh - 52px);}
+
+/* Sidebar nav */
+.sidenav{width:200px;background:var(--surface);border-right:1px solid var(--line);
+         padding:20px 12px;flex-shrink:0;position:sticky;top:52px;
+         height:calc(100vh - 52px);overflow-y:auto;}
+.sidenav-item{display:block;padding:9px 12px;border-radius:8px;font-size:15px;font-family:font-family:var(--serif);
+              color:var(--ink-2);text-decoration:none;transition:all 0.15s;
+              margin-bottom:2px;cursor:pointer;border:none;background:transparent;
+              width:100%;text-align:left;}
+.sidenav-item:hover{background:var(--hover);color:var(--ink);}
+.sidenav-item.active{background:var(--hover);color:var(--ink);font-weight:500;}
+.sidenav-title{font-size:20px;font-weight:600;text-transform:uppercase;
+               letter-spacing:0.06em;color:var(--ink-3);padding:0 12px;
+               margin:16px 0 6px;}
+
+/* Page */
+.page-content{flex:1;padding:28px 32px 60px;max-width:1000px;}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+.page-header{margin-bottom:24px;}
+.page-title{font-family:var(--serif);font-size:26px;font-weight:400;
+            color:var(--ink);margin-bottom:4px;}
+.page-meta{font-size:13px;color:var(--ink-3);}
+
+/* Stat cards */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+          gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--line);
+           border-radius:10px;padding:16px 18px;}
+.stat-num{font-size:26px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.stat-label{font-size:12px;color:var(--ink-2);}
+.stat-card.accent{border-left:4px solid var(--ink);}
+
+/* Section cards */
+.section{background:var(--surface);border:1px solid var(--line);
+         border-radius:10px;padding:20px 24px;margin-bottom:16px;}
+.section-head{display:flex;align-items:flex-start;justify-content:space-between;
+              margin-bottom:14px;}
+.section-title{font-size:14px;font-weight:600;color:var(--ink);}
+.section-sub{font-size:12px;color:var(--ink-3);margin-top:2px;}
+
+/* Alpha badge */
+.reliability-badge{display:inline-flex;align-items:center;gap:6px;
+                   padding:4px 12px;border-radius:100px;font-size:12px;font-weight:500;
+                   margin-bottom:12px;}
+
+/* Score ring */
+.score-wrap{display:flex;align-items:center;gap:20px;}
+.score-ring{position:relative;width:90px;height:90px;flex-shrink:0;}
+.score-ring svg{transform:rotate(-90deg);}
+.score-ring-num{position:absolute;top:50%;left:50%;
+                transform:translate(-50%,-50%);
+                font-size:18px;font-weight:600;}
+.score-info{flex:1;}
+.score-level{font-size:14px;font-weight:500;margin-bottom:4px;}
+.score-desc{font-size:12px;color:var(--ink-2);line-height:1.5;}
+
+/* HMSAM table */
+.hmsam-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px;}
+.hmsam-table th{text-align:left;padding:7px 10px;font-size:11px;font-weight:600;
+                text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-3);
+                border-bottom:1px solid var(--line);}
+.hmsam-table td{padding:9px 10px;border-bottom:1px solid var(--line);}
+.hmsam-table tr:last-child td{border-bottom:none;}
+.bar-cell{width:200px;}
+.bar-wrap{height:7px;background:#f0f0e8;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--ink);border-radius:4px;}
+.interp-badge{font-size:11px;padding:2px 8px;border-radius:100px;
+              background:#f0f0e8;color:var(--ink-2);}
+.interp-badge.agree{background:#dcfce7;color:#166534;}
+.interp-badge.somewhat{background:#fef9c3;color:#854d0e;}
+.interp-badge.neutral{background:#f3f4f6;color:#6b7280;}
+
+/* Status badge */
+.status-badge{display:inline-flex;align-items:center;gap:5px;
+              padding:4px 12px;border-radius:100px;font-size:12px;font-weight:500;}
+.status-active{background:#dcfce7;color:#166534;}
+.status-inactive{background:#fee2e2;color:#991b1b;}
+
+/* Response tabs */
+.resp-tabs{display:flex;gap:0;border-bottom:1px solid var(--line);margin-bottom:20px;}
+.resp-tab{padding:8px 16px;font-size:13px;font-weight:500;color:var(--ink-3);
+          border-bottom:2px solid transparent;cursor:pointer;transition:all 0.15s;}
+.resp-tab:hover{color:var(--ink);}
+.resp-tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+
+/* Charts */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.chart-card{background:var(--surface);border:1px solid var(--line);
+            border-radius:10px;padding:18px 20px;}
+.chart-qlabel{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:14px;
+              line-height:1.4;}
+.chart-wrap{position:relative;height:180px;}
+
+/* Word cloud */
+.wordcloud-wrap{padding:16px;background:var(--hover);border-radius:8px;
+                display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+                min-height:80px;}
+.wc-word{cursor:default;border-radius:4px;padding:2px 6px;
+         background:var(--surface);border:1px solid var(--line);
+         color:var(--ink-2);transition:all 0.15s;}
+.wc-word:hover{border-color:var(--ink-3);color:var(--ink);}
+
+/* Text answers list */
+.text-answers{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.text-answer-item{background:var(--hover);border-radius:6px;
+                  padding:8px 12px;font-size:13px;color:var(--ink-2);
+                  line-height:1.5;}
+
+/* Respondent tab */
+.respondent-select-wrap{margin-bottom:20px;}
+.respondent-select-wrap select{width:100%;max-width:400px;}
+.resp-answer-table{width:100%;border-collapse:collapse;font-size:13px;}
+.resp-answer-table th{text-align:left;padding:8px 12px;font-size:11px;
+                      font-weight:600;text-transform:uppercase;letter-spacing:0.04em;
+                      color:var(--ink-3);border-bottom:1px solid var(--line);}
+.resp-answer-table td{padding:10px 12px;border-bottom:1px solid var(--line);
+                      vertical-align:top;}
+.resp-answer-table tr:last-child td{border-bottom:none;}
+.resp-answer-table tr:hover td{background:var(--hover);}
+.q-code-cell{font-size:11px;color:var(--ink-3);width:60px;}
+.answer-value{font-weight:500;}
+
+/* Leaderboard */
+.lb-rows{display:flex;flex-direction:column;gap:0;}
+.lb-row{display:flex;align-items:center;gap:12px;padding:10px 0;
+        border-bottom:1px solid var(--line);}
+.lb-row:last-child{border-bottom:none;}
+.lb-rank{font-size:18px;width:32px;flex-shrink:0;text-align:center;}
+.lb-name{flex:1;font-size:13px;}
+.lb-pts{font-size:13px;font-weight:500;}
+
+/* Share card */
+.share-row{display:flex;align-items:flex-start;gap:16px;padding:14px 0;
+           border-bottom:1px solid var(--line);}
+.share-row:last-child{border-bottom:none;}
+.share-label{width:120px;flex-shrink:0;}
+.share-label-title{font-size:13px;font-weight:500;color:var(--ink);}
+.share-label-desc{font-size:12px;color:var(--ink-3);margin-top:2px;line-height:1.4;}
+.share-value-wrap{flex:1;display:flex;align-items:center;gap:8px;}
+.share-value{flex:1;background:var(--hover);border:1px solid var(--line);
+             border-radius:6px;padding:9px 12px;font-size:13px;
+             color:var(--ink);word-break:break-all;font-family:var(--sans);}
+.share-code{font-size:20px;font-weight:600;letter-spacing:4px;}
+.copy-btn{padding:8px 14px;background:var(--ink);color:#fff;border:none;
+          border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;
+          white-space:nowrap;transition:opacity 0.15s;flex-shrink:0;}
+.copy-btn:hover{opacity:0.85;}
+
+/* Form preview */
+.preview-notice{background:#f0eef8;border:1px solid #d8d4f0;border-radius:8px;
+                padding:10px 14px;font-size:12px;color:#534AB7;
+                margin-bottom:16px;}
+
+
+.q-points-tag{
+  background:#f0eef8;color:#7A4FA8;font-size:11px;font-weight:600;
+  padding:2px 8px;border-radius:100px;margin-left:8px;
+}
+
+@media(max-width:700px){
+  .charts-grid{grid-template-columns:1fr;}
+  .stat-row{grid-template-columns:1fr 1fr;}
+  .outer{flex-direction:column;}
+  .sidenav{width:100%;height:auto;position:static;
+           display:flex;flex-wrap:wrap;gap:4px;padding:12px;}
+  .sidenav-title{display:none;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="/" class="brand">Feedora</a>
+  <span style="font-size:13px;color:var(--ink-2);">{{ survey.title }}</span>
+  <div class="topbar-right">
+    <a href="{% url 'export_csv' survey.access_uuid %}" class="btn btn-outline">↓ Export CSV</a>
+    <a href="{% url 'my_surveys' %}" class="btn btn-dark">← My surveys</a>
+    <!-- <a href="{% url 'add_features' survey.access_uuid %}" class="btn btn-outline">✨ Add features</a> -->
+    <!-- Disabled add features button only for now -->
+  </div>
+</div>
+
+<div class="outer">
+
+  <!-- Sidebar -->
+  <nav class="sidenav">
+    <div class="sidenav-title">Survey</div>
+    <button class="sidenav-item active" onclick="showTab('dashboard',this)">Dashboard</button>
+    <button class="sidenav-item" onclick="showTab('sharing',this)">Survey sharing details</button>
+    <button class="sidenav-item" onclick="showTab('questions',this)">Form questions</button>
+  </nav>
+
+  <!-- Main content -->
+  <div class="page-content">
+
+    <!-- ══ DASHBOARD TAB ══════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-dashboard">
+
+      <div class="page-header">
+        <h1 class="page-title">{{ survey.title }}</h1>
+        <p class="page-meta">
+          Created {{ survey.created_at|date:"M d, Y" }} ·
+          {% if survey.is_hmsam %}HMSAM Survey{% else %}Standard Survey{% endif %}
+        </p>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stat-row">
+        <div class="stat-card accent">
+          <div class="stat-num">{{ response_count }}</div>
+          <div class="stat-label">Total responses</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">{{ survey.questions.count }}</div>
+          <div class="stat-label">Questions</div>
+        </div>
+        <div class="stat-card">
+          {% if alpha %}
+          <div class="stat-num">{{ alpha }}</div>
+          <div class="stat-label">Cronbach's α</div>
+          {% else %}
+          <div class="stat-num" style="font-size:16px;color:var(--ink-3);">N/A</div>
+          <div class="stat-label">Cronbach's α</div>
+          {% endif %}
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="font-size:16px;">
+            {% if survey.is_active %}
+            <span class="status-badge status-active">● Active</span>
+            {% else %}
+            <span class="status-badge status-inactive">● Inactive</span>
+            {% endif %}
+          </div>
+          <div class="stat-label" style="margin-top:4px;">Status</div>
+        </div>
+      </div>
+
+      <!-- Reliability -->
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Check Form Reliability</div> <br>
+            <div class="section-sub">Based on Cronbach's alpha method</div>
+          </div>
+        </div>
+        {% if alpha %}
+          {% if alpha >= 0.8 %}
+          <span class="reliability-badge" style="background:#dcfce7;color:#166534;">
+            ✓ {{ alpha_interp }}
+          </span>
+          {% elif alpha >= 0.6 %}
+          <span class="reliability-badge" style="background:#fef9c3;color:#854d0e;">
+            ⚠ {{ alpha_interp }}
+          </span>
+          {% else %}
+          <span class="reliability-badge" style="background:#fee2e2;color:#991b1b;">
+            ✕ {{ alpha_interp }}
+          </span>
+          {% endif %}
+          <div class="score-wrap">
+            <div class="score-ring">
+              <svg width="90" height="90" viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="36" fill="none" stroke="#f0f0e8" stroke-width="9"/>
+                <circle cx="45" cy="45" r="36" fill="none"
+                        stroke="{% if alpha >= 0.8 %}#1D9E75{% elif alpha >= 0.6 %}#d97706{% else %}#A04545{% endif %}"
+                        stroke-width="9" stroke-linecap="round"
+                        stroke-dasharray="{{ alpha|floatformat:2 }} 1"
+                        style="stroke-dasharray:calc({{ alpha }} * 226) 226;"/>
+              </svg>
+              <div class="score-ring-num"
+                   style="color:{% if alpha >= 0.8 %}#1D9E75{% elif alpha >= 0.6 %}#d97706{% else %}#A04545{% endif %}">
+                {{ alpha }}
+              </div>
+            </div>
+            <div class="score-info">
+              <div class="score-level">Overall score</div>
+              <div class="score-desc">
+                Alpha &gt; 0.7 is acceptable · &gt; 0.8 is good · &gt; 0.9 is excellent.
+                Based on {{ response_count }} response{{ response_count|pluralize }}.
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <p style="font-size:13px;color:var(--ink-3);">
+            {{ alpha_interp }} + Need at least 2 likert questions.
+          </p>
+        {% endif %}
+      </div>
+
+      <!-- HMSAM Score — only for HMSAM surveys -->
+      {% if survey.is_hmsam and hmsam_scores %}
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Check HMSAM Score</div>
+            <div class="section-sub">Overall analysis of your form based on the Hedonic-Motivation System Adoption model</div>
+          </div>
+        </div>
+
+        {% if overall_interp %}
+        <span class="reliability-badge"
+              style="background:{{ overall_interp.bg }};color:{{ overall_interp.color }};">
+          ✓ {{ overall_interp.level }}
+        </span>
+        <div class="score-wrap" style="margin-bottom:20px;">
+          <div class="score-ring">
+            <svg width="90" height="90" viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="36" fill="none" stroke="#f0f0e8" stroke-width="9"/>
+              <circle cx="45" cy="45" r="36" fill="none"
+                      stroke="{{ overall_interp.color }}" stroke-width="9"
+                      stroke-linecap="round"
+                      style="stroke-dasharray:calc({{ overall_score }} * 2.26) 226;"/>
+            </svg>
+            <div class="score-ring-num" style="color:{{ overall_interp.color }};">
+              {{ overall_score }}%
+            </div>
+          </div>
+          <div class="score-info">
+            <div class="score-level" style="color:{{ overall_interp.color }};">
+              {{ overall_interp.level }}
+            </div>
+            <div class="score-desc">{{ overall_interp.description }}</div>
+            <div class="score-desc" style="margin-top:4px;">
+              Based on {{ response_count }} response{{ response_count|pluralize }}.
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <table class="hmsam-table">
+          <thead>
+            <tr>
+              <th>Construct</th>
+              <th>Score</th>
+              <th class="bar-cell"></th>
+              <th>Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for key, data in hmsam_scores.items %}
+            <tr>
+              <td>{{ data.label }}</td>
+              <td style="font-weight:500;">{{ data.score }}%</td>
+              <td class="bar-cell">
+                <div class="bar-wrap">
+                  <div class="bar-fill" style="width:{{ data.score }}%;"></div>
+                </div>
+              </td>
+              <td>
+                <span class="interp-badge {% if data.score >= 70.1 %}agree{% elif data.score >= 56.1 %}somewhat{% else %}neutral{% endif %}">
+                  {{ data.interpretation }}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+
+      <!-- Responses summary -->
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Responses summary</div>
+            <div class="section-sub">Analyse how respondents answered your survey</div>
+          </div>
+        </div>
+
+        <div class="resp-tabs">
+          <div class="resp-tab active" onclick="setRespTab(this,'by-question')">By question</div>
+          <div class="resp-tab" onclick="setRespTab(this,'by-respondent')">By respondent</div>
+        </div>
+
+        <!-- By question -->
+        <div id="by-question">
+          {% if response_count == 0 %}
+          <p style="font-size:13px;color:var(--ink-3);padding:20px 0;">
+            No responses yet — share the survey to start collecting data.
+          </p>
+          {% else %}
+          <div class="charts-grid" id="chartsGrid"></div>
+          {% endif %}
+        </div>
+
+        <!-- By respondent -->
+        <div id="by-respondent" style="display:none;">
+          <form method="get" action="" class="respondent-select-wrap">
+            <input type="hidden" name="tab" value="responses">
+            <select name="response_id" onchange="this.form.submit()"
+                    style="width:100%;max-width:400px;padding:9px 12px;
+                           border:1px solid var(--line);border-radius:7px;
+                           font-size:13px;background:var(--hover);">
+              <option value="">Select a respondent…</option>
+              {% for resp in respondent_list %}
+              <option value="{{ resp.id }}"
+                {% if selected_response.id == resp.id %}selected{% endif %}>
+                {% if resp.user %}{{ resp.user.email }}{% else %}Anonymous{% endif %}
+                — {{ resp.completed_at|date:"M d, Y H:i" }}
+                ({{ resp.points_earned }} pts)
+              </option>
+              {% endfor %}
+            </select>
+          </form>
+
+          {% if selected_response %}
+          <div style="margin-bottom:12px;padding:10px 14px;background:var(--hover);
+                      border-radius:8px;font-size:13px;color:var(--ink-2);">
+            {% if selected_response.user %}
+            <strong style="color:var(--ink);">{{ selected_response.user.email }}</strong>
+            {% else %}
+            <strong style="color:var(--ink);">Anonymous</strong>
+            {% endif %}
+            · {{ selected_response.completed_at|date:"M d, Y H:i" }}
+            · {{ selected_response.points_earned }} points earned
+          </div>
+          <table class="resp-answer-table">
+            <thead>
+              <tr>
+                <th style="width:50px;">#</th>
+                <th>Question</th>
+                <th>Answer</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in respondent_answers %}
+              <tr>
+                <td class="q-code-cell">
+                  {% if item.question_code %}{{ item.question_code }}
+                  {% else %}Q{{ forloop.counter }}{% endif %}
+                </td>
+                <td style="color:var(--ink-2);">{{ item.question_text }}</td>
+                <td class="answer-value">{{ item.value }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% elif respondent_list %}
+          <p style="font-size:13px;color:var(--ink-3);">
+            Select a respondent above to view their individual answers.
+          </p>
+          {% else %}
+          <p style="font-size:13px;color:var(--ink-3);">
+            No responses yet.
+          </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Leaderboard 
+      {% if leaderboard %}
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <div class="section-title">Leaderboard</div>
+            <div class="section-sub">Top respondents by points earned</div>
+          </div>
+        </div>
+        <div class="lb-rows">
+          {% for resp in leaderboard %}
+          <div class="lb-row">
+            <span class="lb-rank">
+              {% if forloop.counter == 1 %}🥇
+              {% elif forloop.counter == 2 %}🥈
+              {% elif forloop.counter == 3 %}🥉
+              {% else %}{{ forloop.counter }}{% endif %}
+            </span>
+            <span class="lb-name">
+              {% if resp.user %}{{ resp.user.email }}{% else %}Anonymous{% endif %}
+            </span>
+            <span class="lb-pts">{{ resp.points_earned }} pts</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}-->
+
+    </div><!-- /dashboard tab -->
+
+
+    <!-- ══ SHARING TAB ════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-sharing">
+      <div class="page-header">
+        <h1 class="page-title">Survey sharing details</h1>
+        <p class="page-meta">Share these with your respondents</p>
+      </div>
+
+      <div class="section">
+        <div class="section-title" style="margin-bottom:16px;">Share with respondents</div>
+
+        <div class="share-row">
+          <div class="share-label">
+            <div class="share-label-title">Direct link</div>
+            <div class="share-label-desc">Respondent clicks and goes straight to form</div>
+          </div>
+          <div class="share-value-wrap">
+            <span class="share-value" id="directLink">
+              {{ request.scheme }}://{{ request.get_host }}/surveys/respond/{{ survey.access_uuid }}/
+            </span>
+            <button class="copy-btn"
+                    onclick="copyText('directLink',this)">Copy</button>
+          </div>
+        </div>
+
+        <div class="share-row">
+          <div class="share-label">
+            <div class="share-label-title">Code entry page</div>
+            <div class="share-label-desc">Respondent types the access code below</div>
+          </div>
+          <div class="share-value-wrap">
+            <span class="share-value" id="accessPage">
+              {{ request.scheme }}://{{ request.get_host }}/surveys/access/
+            </span>
+            <button class="copy-btn"
+                    onclick="copyText('accessPage',this)">Copy</button>
+          </div>
+        </div>
+
+        <div class="share-row">
+          <div class="share-label">
+            <div class="share-label-title">Access code</div>
+            <div class="share-label-desc">Share this with respondents to enter on the code page</div>
+          </div>
+          <div class="share-value-wrap">
+            <span class="share-value share-code" id="accessCode">
+              {{ survey.access_code }}
+            </span>
+            <button class="copy-btn"
+                    onclick="copyText('accessCode',this)">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /sharing tab -->
+
+
+    <!-- ══ QUESTIONS TAB ══════════════════════════════════ -->
+    <div class="tab-panel" id="tab-questions">
+      <div class="page-header">
+        <h1 class="page-title">Form questions</h1>
+        <p class="page-meta">
+          Preview of your survey — {{ survey.questions.count }} question{{ survey.questions.count|pluralize }}
+        </p>
+      </div>
+
+      <!-- <div class="preview-notice">
+        Preview only — responses submitted here are not saved.
+        To edit this survey, use the survey builder.
+      </div>-->
+
+      <!-- Header card preview -->
+      <div style="background:var(--surface);border:1px solid var(--line);
+                  border-radius:10px;border-top:6px solid {{ survey.theme_accent|default:'#14140f' }};
+                  padding:28px 28px 22px;margin-bottom:12px;">
+        <div style="font-family:var(--serif);font-size:26px;font-weight:400;
+                    color:var(--ink);margin-bottom:8px;">{{ survey.title }}</div>
+        {% if survey.description %}
+        <div style="font-size:14px;color:var(--ink-2);line-height:1.6;">
+          {{ survey.description }}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Questions preview -->
+      {% for question in questions %}
+      <div style="background:var(--surface);border:1px solid var(--line);
+                  border-radius:10px;padding:20px 24px;margin-bottom:10px;">
+        <div style="font-size:14px;font-weight:500;color:var(--ink);
+                    margin-bottom:12px;line-height:1.4;">
+          {% if question.code %}
+          <span style="font-size:11px;color:var(--ink-3);margin-right:6px;">
+            {{ question.code }}
+          </span>
+          {% endif %}
+          {{ question.text }}
+          {% if question.is_required %}
+          <span style="color:#dc2626;margin-left:3px;">*</span>
+          {% endif %}
+          {% if question.hmsam_construct %}
+          <span style="font-size:11px;background:#f0f0e8;color:var(--ink-2);
+                       padding:2px 8px;border-radius:100px;margin-left:8px;">
+            {{ question.get_hmsam_construct_display }}
+          </span>
+          {% endif %}
+          {% if points_enabled %}
+          <span class="q-points-tag">+{{ question.point_value }} pts</span>
+          {% endif %}
+        </div>
+
+        {% if question.question_type == 'likert' %}
+          <div style="display:flex;gap:4px;overflow-x:auto;">
+            <div style="display:flex;gap:4px;overflow-x:auto;">
+                <div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;background:#f4f4ee;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--ink-2);">Strongly Disagree</div>
+                <div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;background:#f4f4ee;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--ink-2);">Disagree</div>
+                <div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;background:#f4f4ee;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--ink-2);">Neutral</div>
+                <div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;background:#f4f4ee;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--ink-2);">Agree</div>
+                <div style="flex:1;min-width:80px;text-align:center;padding:8px 4px;background:#f4f4ee;border:1px solid var(--line);border-radius:6px;font-size:11px;color:var(--ink-2);">Strongly Agree</div>
+            </div>
+          </div>
+        {% elif question.question_type == 'short' %}
+          <div style="border-bottom:1px solid var(--line);padding:6px 0;
+                      font-size:13px;color:var(--ink-3);">Short answer text</div>
+        {% elif question.question_type == 'open' %}
+          <div style="border:1px solid var(--line);border-radius:6px;padding:10px;
+                      font-size:13px;color:var(--ink-3);min-height:50px;">
+            Long answer text
+          </div>
+        {% elif question.question_type in 'mcq,checkbox,dropdown' %}
+          {% for opt in question.options.all %}
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;
+                      border:1px solid var(--line);border-radius:7px;margin-bottom:6px;">
+            <div style="width:16px;height:16px;border-radius:{% if question.question_type == 'checkbox' %}3px{% else %}50%{% endif %};
+                        border:2px solid var(--ink-3);flex-shrink:0;"></div>
+            <span style="font-size:13px;">{{ opt.text }}</span>
+          </div>
+          {% endfor %}
+        {% elif question.question_type == 'rating' %}
+          <div style="display:flex;gap:6px;font-size:28px;color:#d0cfc7;">
+            ★★★★★
+          </div>
+        {% elif question.question_type == 'date' %}
+          <div style="font-size:13px;color:var(--ink-3);padding:8px 0;
+                      border-bottom:1px solid var(--line);">mm/dd/yyyy</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+    </div><!-- /questions tab -->
+
+  </div><!-- /page-content -->
+</div><!-- /outer -->
+
+<!-- Data for charts -->
+<script id="chartData" type="application/json">{{ distribution_json|safe }}</script>
+
+<script>
+const DISTRIBUTION = JSON.parse(document.getElementById('chartData').textContent);
+const COLORS = ['#14140f','#1F4D8F','#0F6B4F','#A04545','#7A4FA8','#B87333','#a3a39a','#4dabf7'];
+
+function showTab(id, el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidenav-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id === 'dashboard') buildCharts();
+}
+
+function setRespTab(el, id){
+  document.querySelectorAll('.resp-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('by-question').style.display = id==='by-question'?'block':'none';
+  document.getElementById('by-respondent').style.display = id==='by-respondent'?'block':'none';
+}
+
+function copyText(id, btn){
+  const text = document.getElementById(id).textContent.trim();
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.background = '#1D9E75';
+    setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; }, 1800);
+  });
+}
+
+let chartsBuilt = false;
+function buildCharts(){
+  if (chartsBuilt) return;
+  chartsBuilt = true;
+  const grid = document.getElementById('chartsGrid');
+  if (!grid) return;
+
+  DISTRIBUTION.forEach((item, i) => {
+    // Word cloud / text answers
+    if (item.type === 'open' || item.type === 'short'){
+      const card = document.createElement('div');
+      card.className = 'chart-card';
+      card.style.gridColumn = '1 / -1';
+
+      const wf = item.word_freq || {};
+      const maxFreq = Math.max(...Object.values(wf), 1);
+      const words = Object.entries(wf).map(([w,c])=>{
+        const size = 12 + Math.round((c / maxFreq) * 16);
+        return `<span class="wc-word" style="font-size:${size}px;">${w}</span>`;
+      }).join('');
+
+      card.innerHTML =
+        `<div class="chart-qlabel">Q${i+1}. ${escHtml(item.question)}</div>` +
+        (words
+          ? `<div class="wordcloud-wrap">${words}</div>`
+          : '') +
+        (item.texts && item.texts.length
+          ? `<div class="text-answers">` +
+            item.texts.slice(0,5).map(t=>
+              `<div class="text-answer-item">${escHtml(t)}</div>`
+            ).join('') +
+            (item.texts.length > 5
+              ? `<div style="font-size:12px;color:var(--ink-3);margin-top:4px;">
+                   +${item.texts.length-5} more responses
+                 </div>` : '') +
+            `</div>` : '');
+
+      grid.appendChild(card);
+      return;
+    }
+
+    // Skip empty data
+    if (!item.data || !item.data.length) return;
+    const hasData = item.data.some(d => d.count > 0);
+    if (!hasData) return;
+
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.innerHTML =
+      `<div class="chart-qlabel">Q${i+1}. ${escHtml(item.question)}</div>` +
+      `<div class="chart-wrap"><canvas id="chart-${i}"></canvas></div>`;
+    grid.appendChild(card);
+
+    const labels = item.data.map(d => d.label);
+    const values = item.data.map(d => d.count);
+
+    const isBar = ['likert','rating'].includes(item.type);
+
+    new Chart(document.getElementById(`chart-${i}`), {
+      type: isBar ? 'bar' : 'pie',
+      data: {
+        labels,
+        datasets:[{
+          data: values,
+          backgroundColor: isBar
+            ? '#14140f'
+            : COLORS.slice(0, labels.length),
+          borderRadius: isBar ? 4 : 0,
+          borderWidth: 0,
+        }],
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{
+            display: !isBar,
+            position:'bottom',
+            labels:{font:{size:11},padding:10},
+          },
+        },
+        scales: isBar ? {
+          y:{
+            beginAtZero:true,
+            ticks:{stepSize:1,font:{size:11}},
+            grid:{color:'#f0f0e8'},
+          },
+          x:{ticks:{font:{size:10}},grid:{display:false}},
+        } : {},
+      },
+    });
+  });
+}
+
+function escHtml(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Build charts on load since dashboard is default tab
+document.addEventListener('DOMContentLoaded', buildCharts);
+
+// Re-open respondent tab if page was reloaded with response_id param
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get('response_id')){
+  const respTab = document.querySelector('.resp-tab:last-child');
+  if (respTab) setRespTab(respTab, 'by-respondent');
+}
+</script>
+</body>
+</html>

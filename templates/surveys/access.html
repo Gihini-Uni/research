@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Access Survey — Feedora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14140f; --ink-2:#6b6b62; --ink-3:#a3a39a;
+    --line:#e8e8e0; --surface:#fff;
+    --sans:'Inter',system-ui,sans-serif;
+    --serif:'Instrument Serif',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html,body{
+    height:100%;font-family:var(--sans);
+    font-size:14px;color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ── Full-page gradient background ── */
+  .bg{
+    min-height:100vh;
+    background: linear-gradient(135deg,
+      #d8c6f0 0%, #c9b8f0 20%,
+      #b8a8e8 40%, #d4c0f5 60%,
+      #e0ccf8 80%, #c8b4ec 100%);
+    display:flex;flex-direction:column; /* ── Add a picture ── */
+  }
+
+  /* ── Topbar ── */
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 28px;
+  }
+  .brand{
+    font-family:var(--serif);font-size:18px;
+    color:var(--ink);text-decoration:none;
+    font-weight:400;
+  }
+  .topbar-link{
+    font-size:13px;color:var(--ink);
+  }
+  .topbar-link a{
+    font-weight:600;color:var(--ink);text-decoration:none;
+  }
+  .topbar-link a:hover{text-decoration:underline;}
+
+  /* ── Centre content ── */
+  .centre{
+    flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:2rem 1rem;
+  }
+
+  .logo-title{
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body:    'DM Sans', system-ui, sans-serif;
+    font-size:clamp(40px,8vw,64px);
+    font-weight:400;
+    color:var(--ink);
+    margin-bottom:10px;
+    text-align:center;
+  }
+  .logo-sub{
+    font-size:15px;color:var(--ink-2);
+    margin-bottom:2.5rem;text-align:center;
+  }
+
+  /* ── Card ── */
+  .card{
+    background:#f0eef5;
+    border-radius:16px;
+    padding:28px 28px 24px;
+    width:100%;max-width:340px;
+    box-shadow:0 2px 24px rgba(80,40,120,0.08);
+  }
+
+  .code-input{
+    width:100%;padding:13px 16px;
+    background:#fff;border:1px solid rgba(150,120,200,0.25);
+    border-radius:8px;font-size:15px;
+    font-family:var(--sans);color:var(--ink);
+    outline:none;text-align:center;
+    letter-spacing:2px;
+    transition:border-color 0.15s,box-shadow 0.15s;
+    margin-bottom:10px;
+  }
+  .code-input::placeholder{
+    letter-spacing:0;color:var(--ink-3);font-size:14px;
+  }
+  .code-input:focus{
+    border-color:rgba(120,80,180,0.5);
+    box-shadow:0 0 0 3px rgba(120,80,180,0.12);
+  }
+  .code-input.error-state{
+    border-color:#dc2626;
+    box-shadow:0 0 0 3px rgba(220,38,38,0.1);
+  }
+
+  .enter-btn{
+    width:100%;padding:13px;
+    background:#6b6b62;color:#fff;
+    border:none;border-radius:8px;
+    font-size:15px;font-weight:600;
+    font-family:var(--sans);cursor:pointer;
+    transition:background 0.15s,transform 0.1s;
+  }
+  .enter-btn:hover{background:#4a4a42;}
+  .enter-btn:active{transform:scale(0.98);}
+
+  .error-msg{
+    font-size:13px;color:#dc2626;
+    text-align:center;margin-top:10px;
+    min-height:18px;
+  }
+
+  /* ── Footer ── */
+  .footer{
+    text-align:center;padding:20px;
+    font-size:13px;color:var(--ink-2);
+  }
+  .footer a{font-weight:600;color:var(--ink);text-decoration:none;}
+  .footer a:hover{text-decoration:underline;}
+
+  /* ── OR divider (for direct link message) ── */
+  .divider{
+    display:flex;align-items:center;gap:10px;
+    margin:14px 0;font-size:12px;color:var(--ink-3);
+  }
+  .divider::before,.divider::after{
+    content:'';flex:1;height:1px;background:rgba(0,0,0,0.1);
+  }
+</style>
+</head>
+<body>
+<div class="bg">
+
+  <!-- Topbar -->
+  <nav class="topbar">
+    <a href="/" class="brand">Feedora</a>
+    <span class="topbar-link">
+      Already have an account?
+      <a href="{% url 'role_select_login' %}">Sign in Now!</a>
+    </span>
+  </nav>
+
+  <!-- Centre -->
+  <div class="centre">
+    <h1 class="logo-title">Feedora</h1>
+    <p class="logo-sub">Enter code to access form</p>
+
+    <div class="card">
+      <form method="post" id="accessForm">
+        {% csrf_token %}
+        <input
+          type="text"
+          name="code"
+          id="codeInput"
+          class="code-input {% if error %}error-state{% endif %}"
+          placeholder="Enter code"
+          value="{{ submitted_code|default:'' }}"
+          maxlength="6"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="characters"
+          spellcheck="false"
+          autofocus>
+
+        <button type="submit" class="enter-btn">Enter</button>
+
+        {% if error %}
+        <p class="error-msg">{{ error }}</p>
+        {% else %}
+        <p class="error-msg"></p>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    Create your own surveys at <a href="/">Feedora</a>
+  </div>
+
+</div>
+
+<script>
+  /* Auto-uppercase the code as user types */
+  const inp = document.getElementById('codeInput');
+  inp.addEventListener('input', () => {
+    const pos = inp.selectionStart;
+    inp.value = inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+    inp.setSelectionRange(pos, pos);
+  });
+
+  /* Remove error styling as soon as user starts typing again */
+  inp.addEventListener('input', () => {
+    inp.classList.remove('error-state');
+    document.querySelector('.error-msg').textContent = '';
+  });
+</script>
+</body>
+</html>

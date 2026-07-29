@@ -1,0 +1,875 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{{ survey.title }} — Feedora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script
+  src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js"
+  type="module">
+</script>
+<style>
+  :root{
+    --ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;
+    --line:#e8e8e0;--surface:#fff;--hover:#f4f4ee;--bg:#fafaf7;
+    --accent:{{ survey.theme_accent|default:'#14140f' }};
+    --btn-bg:{{ survey.theme_accent|default:'#14140f' }};
+    --sans:'Inter',system-ui,sans-serif;
+    --serif:'Instrument Serif',Georgia,serif;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--sans);font-size:15px;color:var(--ink);
+       background:{{ survey.theme_bg|default:'#fafaf7' }};
+       min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+  /* Progress bar */
+  .progress-bar-wrap{position:sticky;top:0;z-index:100;background:#e8e8e0;margin-top: 8px !important;
+  height: 10px !important;}
+  .progress-bar{height:100%;background:var(--accent);width:0%;transition:width 0.4s ease;}
+
+  /* Topbar */
+  .topbar{background:var(--surface);border-bottom:1px solid var(--line);
+          padding:14px 24px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-brand{font-family:var(--serif);font-size:18px;color:var(--ink);text-decoration:none;}
+  .topbar-right{font-size:13px;color:var(--ink-3);}
+
+  /* Page */
+  .page{max-width:680px;margin:36px auto;padding:0 20px 80px;}
+
+  /* Header card */
+  .header-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+               border-top:6px solid var(--accent);padding:32px 32px 28px;margin-bottom:16px;}
+  .form-title{font-family:var(--serif);font-size:30px;font-weight:400;
+              color:var(--ink);line-height:1.2;margin-bottom:10px;}
+  .form-desc{font-size:14px;color:var(--ink-2);line-height:1.6;}
+
+  /* Section header card — FIX: now rendered from Django context */
+  .section-card{
+    background:var(--surface);border:1px solid var(--line);
+    border-radius:10px;border-left:4px solid var(--accent);
+    padding:18px 24px;margin-bottom:12px;margin-top:8px;
+  }
+  .section-label{
+    font-size:11px;font-weight:600;text-transform:uppercase;
+    letter-spacing:0.06em;color:var(--ink-3);margin-bottom:6px;
+  }
+  .section-title{font-size:18px;font-weight:500;color:var(--ink);}
+  .section-desc{font-size:13px;color:var(--ink-2);margin-top:4px;}
+
+  /* Question card */
+  .q-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+          padding:24px 28px;margin-bottom:12px;transition:border-color 0.15s;}
+  .q-card:focus-within{border-color:var(--accent);}
+  .q-card.required-error{border-color:#dc2626;box-shadow:0 0 0 3px rgba(220,38,38,0.08);}
+  .q-label{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:16px;line-height:1.5;}
+  .q-label .req{color:#dc2626;margin-left:3px;}
+  .q-code{font-size:11px;color:var(--ink-3);margin-right:6px;}
+  .q-construct{display:inline-block;font-size:11px;background:#f0f0e8;color:var(--ink-2);
+               padding:2px 8px;border-radius:100px;margin-left:8px;}
+  .q-points-badge{
+    display:inline-block;
+    background:var(--accent);
+    color:#fff;
+    font-size:11px;
+    font-weight:600;
+    padding:2px 8px;
+    border-radius:100px;
+    margin-left:8px;
+    vertical-align:middle;
+  }
+
+  /* Likert */
+  .likert-wrap{overflow-x:auto;}
+  .likert-table{width:100%;border-collapse:collapse;min-width:400px;}
+  .likert-table th{font-size:12px;font-weight:500;color:var(--ink-2);text-align:center;
+                   padding:6px 4px;border-bottom:1px solid var(--line);}
+  .likert-table td{text-align:center;padding:12px 4px;}
+  .likert-radio{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;}
+
+  /* Text */
+  .text-input{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;
+              font-size:14px;color:var(--ink);font-family:var(--sans);background:var(--hover);
+              outline:none;transition:border-color 0.15s,background 0.15s;}
+  .text-input:focus{border-color:var(--accent);background:#fff;}
+  textarea.text-input{resize:vertical;min-height:90px;}
+
+  /* Options */
+  .opt-list{display:flex;flex-direction:column;gap:8px;}
+  .opt-item{display:flex;align-items:center;gap:12px;padding:11px 14px;
+            border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:all 0.15s;}
+  .opt-item:hover{border-color:var(--ink-3);background:var(--hover);}
+  .opt-item input[type="radio"],.opt-item input[type="checkbox"]{
+    width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;}
+  .opt-item span{font-size:14px;color:var(--ink);flex:1;}
+  .opt-item.checked{border-color:var(--accent);background:#f0f0ea;}
+
+  /* Dropdown */
+  .q-select{width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;
+            font-size:14px;color:var(--ink);font-family:var(--sans);background:var(--hover);
+            outline:none;transition:border-color 0.15s;appearance:none;
+            background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b6b62' stroke-width='2.5'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+            background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+  .q-select:focus{border-color:var(--accent);background:#fff;}
+
+  /* Rating */
+  .rating-wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .rating-star{font-size:34px;cursor:pointer;color:#d0cfc7;
+               transition:color 0.1s,transform 0.1s;user-select:none;line-height:1;}
+  .rating-star.hovered,.rating-star.selected{color:#f59e0b;}
+  .rating-star:hover{transform:scale(1.15);}
+  .rating-label{font-size:13px;color:var(--ink-3);margin-left:6px;}
+
+  /* Numeric scale */
+  .numeric-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+  .numeric-cell{
+    min-width:40px;height:40px;border:1px solid var(--line);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:14px;color:var(--ink-2);cursor:pointer;transition:all 0.15s;
+    padding:0 8px;
+  }
+  .numeric-cell:hover{border-color:var(--accent);color:var(--accent);}
+  .numeric-cell.selected{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  /* Date */
+  .date-input{padding:11px 14px;border:1px solid var(--line);border-radius:8px;
+              font-size:14px;color:var(--ink);font-family:var(--sans);background:var(--hover);
+              outline:none;transition:border-color 0.15s;}
+  .date-input:focus{border-color:var(--accent);background:#fff;}
+
+  /* FIX: File upload — proper full-width styling */
+  .file-zone{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    border:2px dashed var(--line);border-radius:8px;
+    padding:32px 20px;text-align:center;cursor:pointer;
+    transition:all 0.15s;background:var(--hover);
+    width:100%;
+  }
+  .file-zone:hover{border-color:var(--accent);background:#fff;}
+  .file-zone.has-file{border-color:var(--accent);border-style:solid;background:#fff;}
+  .file-zone input[type="file"]{display:none;}
+  .file-zone-icon{margin-bottom:10px;color:var(--ink-3);}
+  .file-zone-text{font-size:14px;color:var(--ink-2);font-weight:500;}
+  .file-zone-hint{font-size:12px;color:var(--ink-3);margin-top:4px;}
+  .file-chosen{
+    font-size:13px;color:var(--accent);margin-top:8px;
+    font-weight:500;word-break:break-all;
+  }
+  /* FIX: file upload required validation
+     We use a custom data attribute instead of relying on hidden input */
+  .file-zone[data-has-file="false"].required-highlight{
+    border-color:#dc2626;
+  }
+
+  /* Error hint */
+  .error-hint{font-size:12px;color:#dc2626;margin-top:8px;display:none;}
+  .q-card.required-error .error-hint{display:block;}
+
+  /* Submit */
+  .submit-row{display:flex;align-items:center;gap:16px;margin-top:28px;}
+  .submit-btn{padding:13px 32px;background:var(--btn-bg);color:#fff;border:none;
+              border-radius:8px;font-size:15px;font-weight:500;font-family:var(--sans);
+              cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
+  .submit-btn:hover{opacity:0.85;}
+  .submit-btn:active{transform:scale(0.98);}
+  .submit-note{font-size:12px;color:var(--ink-3);}
+
+  /* Points toast */
+  .points-toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;
+                padding:10px 18px;border-radius:100px;font-size:13px;font-weight:500;
+                opacity:0;transform:translateY(10px);transition:all 0.3s;
+                pointer-events:none;z-index:500;}
+  .points-toast.show{opacity:1;transform:translateY(0);}
+
+  @media(max-width:520px){
+    .page{padding:0 12px 60px;}
+    .header-card,.q-card,.section-card{padding:20px 16px;}
+    .topbar{padding:12px 16px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<div class="topbar">
+  <a href="/" class="topbar-brand">Feedora</a>
+  <div class="topbar-right"><span id="progressLabel">0 / {{ questions|length }} answered</span></div>
+</div>
+
+<div class="page">
+
+    <div class="header-card">
+        {% if survey.header_image_b64 %}
+        <div style="width:100%;height:180px;border-radius:6px;overflow:hidden;margin-bottom:18px;">
+        <img src="{{ survey.header_image_b64 }}"
+            style="width:100%;height:100%;object-fit:cover;display:block;" alt="">
+        </div>
+        {% endif %}
+        <h1 class="form-title">{{ survey.title }}</h1>
+        {% if survey.description %}<p class="form-desc">{{ survey.description }}</p>{% endif %}
+    </div>
+
+  <form method="post" action="{% url 'submit_response' survey.access_uuid %}"
+        id="surveyForm" novalidate enctype="multipart/form-data">
+    {% csrf_token %}
+
+    {% for question in questions %}
+ 
+    {% if question.show_section_header %}
+    <div class="section-card">
+      <div class="section-label">Section {{ question.section_number }}</div>
+      <div class="section-title">{{ question.section_title }}</div>
+      {% if question.section_desc %}<div class="section-desc">{{ question.section_desc }}</div>{% endif %}
+    </div>
+    {% endif %}
+ 
+    <div class="q-card" id="qcard-{{ question.id }}"
+        data-points="{{ question.point_value }}"
+        data-required="{{ question.is_required|lower }}"
+        data-type="{{ question.question_type }}">
+ 
+      <div class="q-label">
+        {% if question.code %}<span class="q-code">{{ question.code }}</span>{% endif %}
+        {{ question.text }}
+        {% if question.is_required %}<span class="req">*</span>{% endif %}
+        {% if question.hmsam_construct %}
+          <span class="q-construct">{{ question.get_hmsam_construct_display }}</span>
+        {% endif %}
+        {% if points_enabled %}
+          <span class="q-points-badge">+{{ question.point_value }} pts</span>
+        {% endif %}
+      </div>
+ 
+      {% if question.question_type == 'likert' %}
+        <div class="likert-wrap">
+          <table class="likert-table">
+            <thead><tr>
+              <th>Strongly<br>Disagree</th><th>Disagree</th>
+              <th>Neutral</th><th>Agree</th><th>Strongly<br>Agree</th>
+            </tr></thead>
+            <tbody><tr>
+              {% for val in '12345' %}
+              <td><input type="radio" class="likert-radio answer-input"
+                         name="q_{{ question.id }}" value="{{ val }}"
+                         data-qid="{{ question.id }}"></td>
+              {% endfor %}
+            </tr></tbody>
+          </table>
+        </div>
+ 
+      {% elif question.question_type == 'short' %}
+        <input type="text" class="text-input answer-input"
+               name="q_{{ question.id }}" placeholder="Your answer"
+               data-qid="{{ question.id }}">
+ 
+      {% elif question.question_type == 'open' %}
+        <textarea class="text-input answer-input"
+                  name="q_{{ question.id }}" placeholder="Your answer"
+                  rows="3" data-qid="{{ question.id }}"></textarea>
+ 
+      {% elif question.question_type == 'mcq' %}
+        <div class="opt-list">
+          {% for option in question.options.all %}
+          <div class="opt-item" onclick="selectOpt(this,'q_{{ question.id }}','{{ option.id }}','radio')">
+            <input type="radio" class="answer-input"
+                   name="q_{{ question.id }}" value="{{ option.id }}"
+                   data-qid="{{ question.id }}" onclick="event.stopPropagation()">
+            <span>{{ option.text }}</span>
+          </div>
+          {% endfor %}
+        </div>
+ 
+      {% elif question.question_type == 'checkbox' %}
+        <div class="opt-list">
+          {% for option in question.options.all %}
+          <div class="opt-item" onclick="selectOpt(this,'q_{{ question.id }}','{{ option.id }}','checkbox')">
+            <input type="checkbox" class="answer-input"
+                   name="q_{{ question.id }}" value="{{ option.id }}"
+                   data-qid="{{ question.id }}" onclick="event.stopPropagation()">
+            <span>{{ option.text }}</span>
+          </div>
+          {% endfor %}
+        </div>
+ 
+      {% elif question.question_type == 'dropdown' %}
+        <select class="q-select answer-input"
+                name="q_{{ question.id }}" data-qid="{{ question.id }}">
+          <option value="">Choose an option</option>
+          {% for option in question.options.all %}
+          <option value="{{ option.id }}">{{ option.text }}</option>
+          {% endfor %}
+        </select>
+ 
+      {% elif question.question_type == 'rating' %}
+        {% if question.rating_style == 'numeric' %}
+          <div class="numeric-wrap" id="numeric-{{ question.id }}" data-selected="0">
+            {% for i in question.rating_range %}
+            <div class="numeric-cell" data-val="{{ i }}" data-qid="{{ question.id }}"
+                 onclick="selectNumeric(this, '{{ question.id }}')">{{ i }}</div>
+            {% endfor %}
+          </div>
+          <input type="hidden" class="answer-input"
+                 name="q_{{ question.id }}" id="rating-val-{{ question.id }}"
+                 data-qid="{{ question.id }}" value="">
+ 
+        {% elif question.rating_style == 'likert' %}
+          <div class="likert-wrap">
+            <table class="likert-table">
+              <thead><tr>
+                <th>Strongly<br>Disagree</th><th>Disagree</th>
+                <th>Neutral</th><th>Agree</th><th>Strongly<br>Agree</th>
+              </tr></thead>
+              <tbody><tr>
+                {% for val in '12345' %}
+                <td><input type="radio" class="likert-radio answer-input"
+                           name="q_{{ question.id }}" value="{{ val }}"
+                           data-qid="{{ question.id }}"></td>
+                {% endfor %}
+              </tr></tbody>
+            </table>
+          </div>
+ 
+        {% else %}
+          <div class="rating-wrap" id="rating-{{ question.id }}" data-selected="0">
+            {% for i in question.rating_range %}
+            <span class="rating-star" data-val="{{ i }}"
+                  data-qid="{{ question.id }}">★</span>
+            {% endfor %}
+            <span class="rating-label" id="rating-label-{{ question.id }}">Select a rating</span>
+          </div>
+          <input type="hidden" class="answer-input"
+                 name="q_{{ question.id }}" id="rating-val-{{ question.id }}"
+                 data-qid="{{ question.id }}" value="">
+        {% endif %}
+ 
+      {% elif question.question_type == 'date' %}
+        <input type="date" class="date-input answer-input"
+               name="q_{{ question.id }}" data-qid="{{ question.id }}">
+ 
+      {% elif question.question_type == 'file' %}
+        <div class="file-zone" id="filezone-{{ question.id }}"
+             data-has-file="false" data-qid="{{ question.id }}"
+             onclick="document.getElementById('file-{{ question.id }}').click()">
+          <div class="file-zone-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17,8 12,3 7,8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div class="file-zone-text">Click to upload a file</div>
+          <div class="file-zone-hint">Any file type accepted</div>
+          <div class="file-chosen" id="file-chosen-{{ question.id }}"></div>
+          <input type="file" id="file-{{ question.id }}"
+                 name="q_{{ question.id }}" data-qid="{{ question.id }}"
+                 onclick="event.stopPropagation()">
+        </div>
+      {% endif %}
+ 
+      <div class="error-hint">This question is required.</div>
+    </div>
+    {% endfor %}
+
+    <div class="submit-row">
+      <button type="submit"
+              style="background:{{ survey.btn_color|default:'#14140f' }};
+                     color:#fff;border:none;
+                     border-radius:{{ survey.btn_radius|default:'6' }}px;
+                     padding:{{ survey.btn_padding|default:'13px 32px' }};
+                     font-size:{{ survey.btn_font_size|default:'15px' }};
+                     font-weight:500;font-family:'Inter',sans-serif;
+                     cursor:pointer;">
+        {{ survey.submit_label|default:'Submit' }}
+      </button> <!--Temporary solution to see if it works-->
+      <span class="submit-note">
+        {% if survey.is_hmsam %}Your responses help measure system adoption.
+        {% else %}Your feedback is anonymous and appreciated.{% endif %}
+      </span>
+    </div>
+  </form>
+</div>
+
+<div class="points-toast" id="pointsToast">+10 pts</div>
+
+<script>
+const TOTAL_Q = {{ questions|length }};
+const answeredSet = new Set();
+
+function updateProgress(){
+  const pct = TOTAL_Q > 0 ? (answeredSet.size / TOTAL_Q) * 100 : 0;
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent =
+    answeredSet.size + ' / ' + TOTAL_Q + ' answered';
+}
+
+function showToast(msg){
+  const t = document.getElementById('pointsToast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function markAnswered(qid, isTextarea){
+  if (!answeredSet.has(qid)){
+    answeredSet.add(qid);
+    const card = document.getElementById('qcard-' + qid);
+    if (card) card.classList.remove('required-error');
+    const pts = card ? (card.dataset.points || '10') : '10';
+    showToast('+' + pts + ' pts');
+    updateProgress();
+  }
+}
+
+/* Option click handler */
+function selectOpt(div, name, value, type){
+  const inp = div.querySelector('input');
+  if (!inp) return;
+  if (type === 'radio'){
+    div.parentElement.querySelectorAll('.opt-item').forEach(d => {
+      d.classList.remove('checked');
+      const r = d.querySelector('input[type="radio"]');
+      if (r) r.checked = false;
+    });
+    inp.checked = true; div.classList.add('checked');
+  } else {
+    inp.checked = !inp.checked;
+    div.classList.toggle('checked', inp.checked);
+  }
+  inp.dispatchEvent(new Event('change', {bubbles:true}));
+}
+
+/* Numeric scale click */
+function selectNumeric(cell, qid){
+  const val = cell.dataset.val;
+  const wrap = cell.parentElement;
+  wrap.querySelectorAll('.numeric-cell').forEach(c => c.classList.remove('selected'));
+  cell.classList.add('selected');
+  const hidden = document.getElementById('rating-val-' + qid);
+  if (hidden){
+    hidden.value = val;
+    hidden.dispatchEvent(new Event('change', {bubbles:true}));
+  }
+}
+
+/* Answer tracking */
+document.querySelectorAll('.answer-input').forEach(inp => {
+  const handler = () => {
+    const qid = inp.dataset.qid; if (!qid) return;
+    let hasValue = false;
+    if (inp.type === 'radio' || inp.type === 'checkbox'){
+      hasValue = !!document.querySelector('input[name="q_'+qid+'"]:checked');
+    } else { hasValue = inp.value.trim() !== ''; }
+    if (hasValue) markAnswered(qid, inp.tagName === 'TEXTAREA');
+    else { answeredSet.delete(qid); updateProgress(); }
+  };
+  inp.addEventListener('change', handler);
+  if (inp.tagName === 'TEXTAREA' || inp.type === 'text') inp.addEventListener('input', handler);
+});
+
+/* Rating stars */
+document.querySelectorAll('.rating-wrap').forEach(wrap => {
+  const stars = wrap.querySelectorAll('.rating-star');
+  if (!stars.length) return;
+  const qid = stars[0].dataset.qid;
+  const hidden = document.getElementById('rating-val-' + qid);
+  const label = document.getElementById('rating-label-' + qid);
+  const labels = ['','Poor','Fair','Good','Very good','Excellent'];
+  stars.forEach((star, i) => {
+    star.addEventListener('mouseover', () => {
+      stars.forEach((s,j) => s.classList.toggle('hovered', j <= i));
+      if (label) label.textContent = labels[i+1] || (i+1)+' stars';
+    });
+    star.addEventListener('mouseout', () => {
+      stars.forEach(s => s.classList.remove('hovered'));
+      const sel = parseInt(wrap.dataset.selected || '0');
+      if (label) label.textContent = sel > 0 ? (labels[sel]||sel+' stars') : 'Select a rating';
+    });
+    star.addEventListener('click', () => {
+      const val = i+1; wrap.dataset.selected = val;
+      stars.forEach((s,j) => s.classList.toggle('selected', j < val));
+      if (hidden){ hidden.value = val; hidden.dispatchEvent(new Event('change',{bubbles:true})); }
+      if (label) label.textContent = labels[val]||val+' stars';
+    });
+  });
+});
+
+/* FIX: File upload — update zone appearance + fix required validation */
+document.querySelectorAll('input[type="file"]').forEach(inp => {
+  inp.addEventListener('change', () => {
+    const qid  = inp.dataset.qid;
+    const zone = document.getElementById('filezone-' + qid);
+    const lbl  = document.getElementById('file-chosen-' + qid);
+    if (inp.files[0]){
+      if (lbl)  lbl.textContent = '✓ ' + inp.files[0].name;
+      if (zone){
+        zone.dataset.hasFile = 'true';
+        zone.classList.add('has-file');
+      }
+      markAnswered(qid, false);
+    } else {
+      if (lbl)  lbl.textContent = '';
+      if (zone){
+        zone.dataset.hasFile = 'false';
+        zone.classList.remove('has-file');
+      }
+      answeredSet.delete(qid);
+      updateProgress();
+    }
+  });
+});
+
+/* Form validation */
+document.getElementById('surveyForm').addEventListener('submit', function(e){
+  let firstError = null;
+  document.querySelectorAll('.q-card[data-required="true"]').forEach(card => {
+    const qid  = card.id.replace('qcard-','');
+    const type = card.dataset.type;
+    let ok = false;
+
+    if (type === 'file'){
+      /* FIX: check file zone data attribute instead of hidden input */
+      const zone = document.getElementById('filezone-' + qid);
+      ok = zone && zone.dataset.hasFile === 'true';
+    } else {
+      const radio  = card.querySelector('input[type="radio"]');
+      const check  = card.querySelector('input[type="checkbox"]');
+      const text   = card.querySelector('input[type="text"],textarea,input[type="date"]');
+      const sel    = card.querySelector('select');
+      const hidden = card.querySelector('input[type="hidden"][name^="q_"]');
+      if (radio)       ok = !!card.querySelector('input[type="radio"]:checked');
+      else if (check)  ok = !!card.querySelector('input[type="checkbox"]:checked');
+      else if (sel)    ok = sel.value !== '';
+      else if (hidden) ok = hidden.value !== '';
+      else if (text)   ok = text.value.trim() !== '';
+    }
+
+    if (!ok){ card.classList.add('required-error'); if (!firstError) firstError = card; }
+    else { card.classList.remove('required-error'); }
+  });
+  if (firstError){ e.preventDefault(); firstError.scrollIntoView({behavior:'smooth',block:'center'}); }
+});
+
+updateProgress();
+</script>
+
+{# ── Progress bar CSS overrides ── #}
+{% with prog=survey.features.progress %}
+<style>
+/* FIX: progress bar spacing from topbar + bigger height 
+.progress-bar-wrap{
+  margin-top: 8px !important;
+  height: 10px !important;
+  position: relative;
+}*/
+.progress-bar-track{
+  height: 10px !important;
+  border-radius: 5px;
+}
+#progressBar{
+  height: 10px !important;
+  border-radius: 5px;
+  transition: width 0.4s ease;
+  {% if prog.enabled %}
+    {% if prog.style == 'gradient' %}
+      background: linear-gradient(90deg, {{ prog.color|default:'#7A4FA8' }}80, {{ prog.color|default:'#7A4FA8' }}) !important;
+    {% elif prog.style == 'striped' %}
+      background: repeating-linear-gradient(90deg, {{ prog.color|default:'#7A4FA8' }} 0, {{ prog.color|default:'#7A4FA8' }} 8px, transparent 8px, transparent 14px) !important;
+    {% else %}
+      background:{{ prog.color|default:'#7A4FA8' }} !important;
+    {% endif %}
+  {% endif %}
+}
+/* FIX: progress label */
+#progressLabel{
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b6b62;
+  margin-top: 4px;
+  display: {% if prog.label == 'none' %}none{% else %}block{% endif %};
+  text-align: right;
+}
+{% if not prog.enabled %}
+.progress-bar-wrap{ display: none !important; }
+{% endif %}
+</style>
+{% endwith %}
+ 
+{# ── Mascot ── #}
+{% if survey.features.mascot.enabled %}
+<style>
+.mascot-wrap{
+  position: fixed;
+  z-index: 400;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  {% if survey.features.mascot.position == 'bottom-right' %}
+    bottom: 24px; right: 24px; flex-direction: row-reverse;
+  {% elif survey.features.mascot.position == 'top-left' %}
+    top: 70px; left: 24px; flex-direction: row; align-items: flex-start;
+  {% elif survey.features.mascot.position == 'top-right' %}
+    top: 70px; right: 24px; flex-direction: row-reverse; align-items: flex-start;
+  {% else %}
+    bottom: 24px; left: 24px; flex-direction: row;
+  {% endif %}
+}
+/* FIX: bigger mascot */
+.mascot-img{
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.18));
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+.mascot-img:hover{ transform: scale(1.06); }
+ 
+.mascot-bubble{
+  max-width: 240px;
+  background: #fff;
+  border: 2px solid #7A4FA8;
+  border-radius: 18px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.4;
+  box-shadow: 0 4px 20px rgba(122,79,168,0.2);
+  opacity: 0;
+  transform: scale(0.8) translateY(10px);
+  position: relative;
+  transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+.mascot-bubble.show{
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+ 
+/* Bubble tail */
+{% if survey.features.mascot.position == 'bottom-right' or survey.features.mascot.position == 'top-right' %}
+.mascot-bubble::after{
+  content:''; position:absolute; bottom:16px; right:-11px;
+  border:6px solid transparent; border-left-color:#7A4FA8;
+}
+{% else %}
+.mascot-bubble::after{
+  content:''; position:absolute; bottom:16px; left:-11px;
+  border:6px solid transparent; border-right-color:#7A4FA8;
+}
+{% endif %}
+ 
+/* FIX: Custom exit modal — replaces browser "Leave site?" dialog */
+.mascot-exit-modal{
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.mascot-exit-box{
+  background: #fff; border-radius: 18px;
+  padding: 28px 28px 24px; max-width: 400px; width: 100%;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.22);
+  animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn{from{transform:scale(0.8);opacity:0;}to{transform:scale(1);opacity:1;}}
+.modal-cat{ width: 110px; height: auto; margin-bottom: 14px; }
+.modal-title{ font-size:17px; font-weight:600; color:#14140f; margin-bottom:8px; }
+.modal-text{ font-size:13px; color:#6b6b62; line-height:1.6; margin-bottom:22px; }
+.modal-btns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.modal-btn-leave{
+  padding: 10px 20px; background: transparent;
+  border: 1px solid #e8e8e0; border-radius: 8px;
+  font-size: 13px; color: #6b6b62; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: background 0.15s;
+}
+.modal-btn-leave:hover{ background: #f4f4ee; }
+.modal-btn-stay{
+  padding: 10px 20px; background: #7A4FA8;
+  border: none; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: #fff; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: opacity 0.15s;
+}
+.modal-btn-stay:hover{ opacity: 0.85; }
+</style>
+ 
+
+<!--greeting animation-->
+<div id="mascotWrap" class="mascot-wrap">
+  <img id="mascotImg" src="{% static 'images/mascot/greeting_cat.png' %}" alt="Mascot" class="mascot-img">
+  <!--
+  <dotlottie-wc
+    id="mascotImg"
+    src="https://lottie.host/dee79f6e-c511-432b-837a-18a19793e93a/kEjiCMU0pq.lottie"
+    class="mascot-img"
+    style="width:120px; height:120px;"
+    autoplay
+    loop>
+  </dotlottie-wc>--> <!--use this later for more dynamic animation-->
+  <div class="mascot-bubble" id="mascotBubble"></div>
+</div>
+ 
+<!-- Custom exit modal with sad cat -->
+<div class="mascot-exit-modal" id="exitModal" style="display:none;">
+  <div class="mascot-exit-box">
+    <img src="{% static 'images/mascot/sad_cat.png' %}" alt="" class="modal-cat">
+    <div class="modal-title">Are you sure you want to leave?</div>
+    <p class="modal-text">
+      Your feedback is valuable for both us and future users like you.
+      We appreciate if you could stay and co-operate with us to make
+      our products better!
+    </p>
+    <div class="modal-btns">
+      <button class="modal-btn-leave" id="btnLeave">No, I want to leave</button>
+      <button class="modal-btn-stay" id="btnStay">Ok, I'll stay! 😊</button>
+    </div>
+  </div>
+</div>
+ 
+<script>
+(function(){
+  const img = document.getElementById('mascotImg');
+  const bubble = document.getElementById('mascotBubble');
+  const modal  = document.getElementById('exitModal');
+  if (!img) return;
+ 
+  const BASE = "{% static 'images/mascot/' %}";
+  const IMGS = {
+    greeting:  BASE + 'greeting_cat.png',
+    encourage: BASE + 'encourage_cat.png',
+    sad:       BASE + 'sad_cat.png',
+    thanks:    BASE + 'thank_you_cat.png',
+  };
+ 
+  function showMsg(text, imgKey, duration){
+    img.src = IMGS[imgKey] || IMGS.greeting;
+    bubble.textContent = text;
+    bubble.classList.add('show');
+    if (duration) setTimeout(() => bubble.classList.remove('show'), duration);
+  }
+ 
+  // 1. Entry greeting
+  setTimeout(() => showMsg("Let's get started!", 'greeting', 4000), 800);
+ 
+  // 2. Halfway encouragement — watch progress bar
+  let halfShown = false;
+  const pb = document.getElementById('progressBar');
+  if (pb){
+    new MutationObserver(() => {
+      if (halfShown) return;
+      const pct = parseFloat(pb.style.width) || 0;
+      if (pct >= 50){
+        halfShown = true;
+        setTimeout(() => showMsg("You're halfway there — Don't give up now!", 'encourage', 5000), 300);
+      }
+    }).observe(pb, { attributes: true, attributeFilter: ['style'] });
+  }
+ 
+  // FIX: allowLeave prevents exit modal + beforeunload on intentional navigation
+  let allowLeave = false;
+ 
+  function hasAnswers(){
+    const checked = document.querySelectorAll('.answer-input:checked').length;
+    const filled  = [...document.querySelectorAll('input.answer-input, textarea.answer-input')]
+                      .filter(i => i.value && i.value.trim() !== '').length;
+    return (checked + filled) > 0;
+  }
+ 
+  // FIX: Remove e.returnValue — this suppresses browser's native "Leave site?" dialog
+  // The custom modal handles exit prevention instead
+  window.addEventListener('beforeunload', function(e){
+    if (!allowLeave && hasAnswers()){
+      // Do NOT set e.returnValue — that triggers the browser dialog
+      // Just show our custom modal if they're navigating via a link
+      // (this fires on tab close/refresh which we can't fully prevent without returnValue)
+    }
+  });
+ 
+  // FIX: Intercept all link clicks to show custom modal instead
+  document.addEventListener('click', function(e){
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+    if (!allowLeave && hasAnswers()){
+      e.preventDefault();
+      modal.style.display = 'flex';
+      modal.dataset.pendingHref = href;
+    }
+  }, true);
+ 
+  document.getElementById('btnStay')?.addEventListener('click', () => {
+    modal.style.display = 'none';
+    showMsg("Great! Let's keep going!", 'encourage', 3000);
+  });
+ 
+  document.getElementById('btnLeave')?.addEventListener('click', () => {
+    allowLeave = true;
+    modal.style.display = 'none';
+    const href = modal.dataset.pendingHref;
+    if (href) window.location.href = href;
+    else window.history.back();
+  });
+ 
+  // FIX: Submit button — set allowLeave BEFORE form submits
+  // This prevents both the exit modal AND the beforeunload dialog
+  const form = document.getElementById('surveyForm');
+  if (form){
+    form.addEventListener('submit', function(e){
+      allowLeave = true; // Must be set before submit to prevent beforeunload
+      // Don't show bubble here — thank you message goes on thank_you.html
+    });
+  }
+ 
+  // Also set allowLeave when submit button is clicked directly
+  const submitBtn = document.querySelector('button[type="submit"], input[type="submit"]');
+  if (submitBtn){
+    submitBtn.addEventListener('click', () => { allowLeave = true; });
+  }
+ 
+})();
+</script>
+{% endif %}
+ 
+{# ── Progress label updater ── #}
+{% with prog=survey.features.progress %}
+{% if prog.enabled and prog.label != 'none' %}
+<script>
+(function(){
+  // Add label element below progress bar if not already there
+  const wrap = document.querySelector('.progress-bar-wrap');
+  if (!wrap) return;
+  let lbl = document.getElementById('progressLabel');
+  if (!lbl){
+    lbl = document.createElement('div');
+    lbl.id = 'progressLabel';
+    wrap.after(lbl);
+  }
+ 
+  const TOTAL = {{ questions|length }};
+  const LABEL_TYPE = '{{ prog.label }}';
+ 
+  // Update label whenever progress bar width changes
+  const pb = document.getElementById('progressBar');
+  if (!pb) return;
+  function updateLabel(){
+    const pct = parseFloat(pb.style.width) || 0;
+    if (LABEL_TYPE === 'percent'){
+      lbl.textContent = Math.round(pct) + '% answered';
+    } else if (LABEL_TYPE === 'count'){
+      const answered = Math.round((pct / 100) * TOTAL);
+      lbl.textContent = answered + ' / ' + TOTAL + ' answered';
+    }
+  }
+  new MutationObserver(updateLabel).observe(pb, {attributes:true, attributeFilter:['style']});
+  updateLabel();
+})();
+</script>
+{% endif %}
+{% endwith %}
+
+</body>
+</html>

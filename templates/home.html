@@ -1,0 +1,479 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Feedora — Gamified Feedback Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14140f;--ink-2:#6b6b62;--ink-3:#a3a39a;--line:#e8e8e0;--surface:#fff;--hover:#f4f4ee;--bg:#fafaf7;--purple:#7F77DD;--purple-dark:#534AB7;--purple-light:#EEEDFE;--purple-mid:#AFA9EC;--green:#0F6E56;--green-light:#E1F5EE;--amber:#854F0B;--amber-light:#FAEEDA;--serif:'Instrument Serif',Georgia,serif;--sans:'Inter',system-ui,sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);font-size:14px;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;}
+a{text-decoration:none;color:inherit;}
+
+/* Nav */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:16px 40px;border-bottom:1px solid var(--line);background:var(--surface);position:sticky;top:0;z-index:100;}
+.nav-logo{font-family:'DM Serif Display', Georgia, serif;font-size:20px;color:var(--ink);}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-link{padding:7px 14px;font-size:13px;color:var(--ink-2);border-radius:6px;}
+.nav-link:hover{background:var(--hover);color:var(--ink);}
+.btn-primary{padding:8px 18px;background:var(--purple);color:var(--purple-light);border:none;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;}
+.btn-primary:hover{background:var(--purple-dark);}
+.btn-outline{padding:8px 18px;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;}
+.btn-outline:hover{background:var(--hover);}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:64px 40px 48px;max-width:1100px;margin:0 auto;}
+.hero-eyebrow{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--purple);margin-bottom:14px;}
+.hero-title{font-size:36px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:16px;}
+.hero-desc{font-size:15px;color:var(--ink-2);line-height:1.7;margin-bottom:28px;}
+.hero-btns{display:flex;gap:10px;}
+.hero-visual{background:var(--surface);border-radius:12px;border:1px solid var(--line);padding:24px;box-shadow:0 2px 20px rgba(0,0,0,0.06);}
+.hw-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;background:var(--purple-light);color:var(--purple-dark);border-radius:100px;font-size:11px;font-weight:500;margin-bottom:14px;}
+.hw-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:10px;}
+.hw-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.hw-label{font-size:11px;color:var(--ink-2);width:90px;text-align:right;flex-shrink:0;}
+.hw-bar-wrap{flex:1;height:8px;background:var(--hover);border-radius:4px;overflow:hidden;}
+.hw-bar{height:100%;border-radius:4px;background:var(--purple);}
+.hw-bar.light{background:var(--purple-mid);}
+.hw-val{font-size:11px;color:var(--ink-2);width:36px;}
+.hw-score{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line);}
+.hw-score-num{font-size:24px;font-weight:500;color:var(--purple);}
+.hw-score-label{font-size:12px;color:var(--ink-2);}
+
+/* Sections */
+.section{padding:56px 40px;max-width:1100px;margin:0 auto;}
+.section-full{padding:56px 40px;background:var(--hover);}
+.section-full-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.08em;color:var(--purple);margin-bottom:10px;}
+.section-h{font-size:26px;font-weight:500;color:var(--ink);line-height:1.3;margin-bottom:12px;}
+.section-p{font-size:14px;color:var(--ink-2);line-height:1.7;}
+.divider{height:1px;background:var(--line);margin:0 40px;}
+
+/* What is Feedora */
+.what-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+.feat-cards{display:flex;flex-direction:column;gap:10px;}
+.feat-card{background:var(--hover);border-radius:10px;padding:16px 18px;border:1px solid var(--line);}
+.feat-card-icon{width:28px;height:28px;border-radius:6px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
+.feat-card-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:4px;}
+.feat-card-desc{font-size:12px;color:var(--ink-2);line-height:1.5;}
+
+/* Who it's for */
+.who-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:28px;}
+.who-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px 18px;}
+.who-card.featured{border:2px solid var(--purple-mid);background:var(--purple-light);}
+.who-tag{display:inline-block;font-size:10px;font-weight:500;padding:3px 8px;border-radius:100px;margin-bottom:10px;background:var(--purple-light);color:var(--purple-dark);}
+.who-card.featured .who-tag{background:var(--purple-mid);color:#26215C;}
+.who-card-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:6px;}
+.who-card-desc{font-size:12px;color:var(--ink-2);line-height:1.5;}
+.who-card.featured .who-card-title,.who-card.featured .who-card-desc{color:#3C3489;}
+
+/* Steps */
+.steps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative;margin-top:32px;}
+.step{text-align:center;padding:0 8px;position:relative;}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--purple-light);color:var(--purple-dark);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500;margin:0 auto 12px;}
+.step-connector{position:absolute;top:18px;left:calc(50% + 18px);right:calc(-50% + 18px);height:1px;background:var(--purple-mid);}
+.step:last-child .step-connector{display:none;}
+.step-title{font-size:12px;font-weight:500;color:var(--ink);margin-bottom:4px;}
+.step-desc{font-size:11px;color:var(--ink-2);line-height:1.5;}
+
+/* Gamification */
+.gf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:28px;}
+.gf-card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px;}
+.gf-card-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.gf-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.gf-card-title{font-size:13px;font-weight:500;color:var(--ink);}
+.gf-card-desc{font-size:12px;color:var(--ink-2);line-height:1.6;}
+
+/* Trust bar */
+.trust{text-align:center;padding:24px 40px;border-bottom:1px solid var(--line);border-top:1px solid var(--line);}
+.trust-label{font-size:12px;color:var(--ink-3);margin-bottom:14px;}
+.trust-logos{display:flex;gap:32px;justify-content:center;flex-wrap:wrap;}
+.trust-logo{font-size:13px;font-weight:500;color:var(--ink-2);opacity:0.5;}
+
+/* CTA */
+.cta{text-align:center;padding:64px 40px;}
+.cta-title{font-size:28px;font-weight:500;color:var(--ink);margin-bottom:10px;}
+.cta-desc{font-size:14px;color:var(--ink-2);margin-bottom:28px;}
+.cta-btns{display:flex;gap:10px;justify-content:center;}
+
+/* Footer */
+.footer{padding:24px 40px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;}
+.footer-logo{font-family:var(--serif);font-size:16px;font-style:italic;color:var(--ink-2);}
+.footer-text{font-size:12px;color:var(--ink-3);}
+
+@media(max-width:700px){
+  .hero,.what-grid{grid-template-columns:1fr;}
+  .who-grid,.gf-grid{grid-template-columns:1fr;}
+  .steps-grid{grid-template-columns:1fr 1fr;}
+  .nav-links a.nav-link{display:none;}
+  .nav,.hero,.section,.section-full,.cta{padding-left:20px;padding-right:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-logo">Feedora</div>
+  <div class="nav-links">
+    <a href="#what" class="nav-link">What is Feedora</a>
+    <a href="#hmsam" class="nav-link">HMSAM</a>
+    <a href="#gamify" class="nav-link">Features</a>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <a href="{% url 'access_survey' %}" class="btn-primary">Enter code</a>
+    <a href="{% url 'role_select_login' %}" class="btn-outline">Log in</a>
+    <a href="{% url 'role_select_register' %}" class="btn-primary">Register</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section style="background:var(--surface);border-bottom:1px solid var(--line);">
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">Gamified feedback platform</div>
+      <h1 class="hero-title">Collect feedback that people actually want to give</h1>
+      <p class="hero-desc">Feedora combines validated HMSAM research methodology with gamification to help you measure hedonic system adoption — and make the process enjoyable for your respondents.</p>
+      <div class="hero-btns">
+        <a href="{% url 'role_select_register' %}" class="btn-primary" style="font-size:14px;padding:10px 22px;">Get started free</a>
+        <a href="#hmsam" class="btn-outline" style="font-size:14px;padding:10px 22px;">See how it works</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hw-badge">★ HMSAM Score — Sample survey</div>
+      <div class="hw-title">Construct breakdown</div>
+      <div class="hw-bar-row"><div class="hw-label">Joy</div><div class="hw-bar-wrap"><div class="hw-bar" style="width:81%;"></div></div><div class="hw-val">81.1%</div></div>
+      <div class="hw-bar-row"><div class="hw-label">Curiosity</div><div class="hw-bar-wrap"><div class="hw-bar" style="width:80%;"></div></div><div class="hw-val">80.0%</div></div>
+      <div class="hw-bar-row"><div class="hw-label">Ease of Use</div><div class="hw-bar-wrap"><div class="hw-bar" style="width:77%;"></div></div><div class="hw-val">76.8%</div></div>
+      <div class="hw-bar-row"><div class="hw-label">Usefulness</div><div class="hw-bar-wrap"><div class="hw-bar light" style="width:73%;"></div></div><div class="hw-val">72.9%</div></div>
+      <div class="hw-bar-row"><div class="hw-label">Control</div><div class="hw-bar-wrap"><div class="hw-bar light" style="width:73%;"></div></div><div class="hw-val">73.4%</div></div>
+      <div class="hw-bar-row"><div class="hw-label">Immersion</div><div class="hw-bar-wrap"><div class="hw-bar light" style="width:67%;"></div></div><div class="hw-val">67.2%</div></div>
+      <div class="hw-score">
+        <div class="hw-score-num">74.2%</div>
+        <div class="hw-score-label">Overall score — <strong>Good adoption</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Trust bar -->
+<div class="trust">
+  <div class="trust-label">Built for researchers, designers, and product teams</div>
+  <div class="trust-logos">
+    <span class="trust-logo">University research</span>
+    <span class="trust-logo">Product teams</span>
+    <span class="trust-logo">UX researchers</span>
+    <span class="trust-logo">Software developers</span>
+    <span class="trust-logo">Startups</span>
+  </div>
+</div>
+
+<!-- Lottie player -->
+<script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.9.10/dist/dotlottie-wc.js" type="module"></script>
+
+<style>
+/* Carousel card */
+.carousel-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  overflow:hidden;position:relative;min-height:320px;
+  display:flex;flex-direction:column;
+}
+.carousel-track{
+  display:flex;transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  flex:1;
+}
+.carousel-slide{
+  min-width:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:28px 28px 20px;text-align:center;gap:10px;
+}
+.carousel-slide-visual{
+  width:160px;height:160px;display:flex;align-items:center;justify-content:center;
+  margin-bottom:4px;
+}
+.carousel-slide-title{
+  font-size:15px;font-weight:500;color:var(--ink);
+}
+.carousel-slide-desc{
+  font-size:13px;color:var(--ink-2);line-height:1.6;max-width:320px;
+}
+/* Nav arrows */
+.carousel-arrow{
+  position:absolute;top:50%;transform:translateY(-50%);
+  width:32px;height:32px;border-radius:50%;
+  background:var(--surface);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:10;transition:all 0.15s;
+  color:var(--ink-2);
+}
+.carousel-arrow:hover{background:var(--hover);color:var(--ink);border-color:var(--ink-3);}
+.carousel-arrow.prev{left:10px;}
+.carousel-arrow.next{right:10px;}
+/* Dots */
+.carousel-dots{
+  display:flex;align-items:center;justify-content:center;
+  gap:6px;padding:12px 0 16px;
+}
+.carousel-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--line);cursor:pointer;transition:all 0.2s;border:none;
+}
+.carousel-dot.active{background:var(--purple);width:18px;border-radius:4px;}
+</style>
+
+<!-- What is Feedora -->
+<section class="section" id="what">
+  <div class="what-grid">
+    <div>
+      <div class="eyebrow">What is Feedora</div>
+      <h2 class="section-h">A smarter way to gather feedback</h2>
+      <p class="section-p">Feedora is a gamified web-based survey platform designed for researchers and product teams who want to understand 
+        how users adopt and enjoy their <b>Hedonic Motivation Systems</b>, which are systems like  such as <b> video games, social media 
+platforms, music streaming services, dating apps, virtual worlds </b> etc 
+        
+      <br> <br> It combines the rigour of academic HMSAM methodology with modern 
+        gamification techniques to improve response quality and completion rates.</p>
+    </div>
+
+    <!-- Single carousel card -->
+    <div class="carousel-card" id="featCarousel">
+
+      <!-- Prev arrow -->
+      <button class="carousel-arrow prev" onclick="moveCarousel(-1)" aria-label="Previous">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+      </button>
+      <!-- Next arrow -->
+      <button class="carousel-arrow next" onclick="moveCarousel(1)" aria-label="Next">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9,6 15,12 9,18"/></svg>
+      </button>
+
+      <div class="carousel-track" id="carouselTrack">
+
+        <!-- Slide 1: Lottie animation -->
+        <div class="carousel-slide">
+          <div class="carousel-slide-visual">
+            <dotlottie-wc
+              src="https://lottie.host/b65815a0-392c-45c0-b9ab-c2bcf410af90/zATpwStbkF.lottie"
+              style="width:160px;height:160px;"
+              autoplay loop>
+            </dotlottie-wc>
+          </div>
+          <div class="carousel-slide-title">Gamification built in</div>
+          <div class="carousel-slide-desc">Points, badges, progress bars, and a virtual mascot make filling 
+            surveys enjoyable — increasing completion rates and response quality.</div>
+        </div>
+
+        <!-- Slide 2: Survey builder screenshot -->
+        <div class="carousel-slide">
+          <div class="carousel-slide-visual" style="width:100%;height:auto;max-height:180px;overflow:hidden;border-radius:8px;border:1px solid var(--line);">
+            <img src="{% static 'images/screenshots/survey_builder.png' %}"
+                 alt="Feedora survey builder"
+                 style="width:100%;height:180px;object-fit:cover;object-position:top;display:block;"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <!-- Fallback if screenshot not available -->
+            <div style="display:none;width:100%;height:180px;background:var(--purple-light);align-items:center;justify-content:center;border-radius:8px;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#7A4FA8" stroke-width="1.5"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>
+            </div>
+          </div>
+          <div class="carousel-slide-title">Create HMSAM survey</div>
+          <div class="carousel-slide-desc">38 validated questions pre-loaded across 7 constructs. Edit wording freely — construct mapping is fixed.</div>
+        </div>
+
+        <!-- Slide 3: Dashboard screenshot -->
+        <div class="carousel-slide">
+          <div class="carousel-slide-visual" style="width:100%;height:auto;max-height:180px;overflow:hidden;border-radius:8px;border:1px solid var(--line);">
+            <img src="{% static 'images/screenshots/dashboard.png' %}"
+                 alt="Feedora analytics dashboard"
+                 style="width:100%;height:180px;object-fit:cover;object-position:top;display:block;"
+                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <!-- Fallback if screenshot not available -->
+            <div style="display:none;width:100%;height:180px;background:#E1F5EE;align-items:center;justify-content:center;border-radius:8px;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+          </div>
+          <div class="carousel-slide-title">Automatic analytics</div>
+          <div class="carousel-slide-desc">Cronbach's alpha, HMSAM construct scores, response charts, and per-respondent analysis — all generated automatically.</div>
+        </div>
+
+      </div><!-- /carousel-track -->
+
+      <!-- Dots -->
+      <div class="carousel-dots" id="carouselDots">
+        <button class="carousel-dot active" onclick="goToSlide(0)"></button>
+        <button class="carousel-dot" onclick="goToSlide(1)"></button>
+        <button class="carousel-dot" onclick="goToSlide(2)"></button>
+      </div>
+
+    </div><!-- /carousel-card -->
+  </div>
+</section>
+
+<script>
+(function(){
+  let current = 0;
+  const total = 3;
+  const track = document.getElementById('carouselTrack');
+  const dots  = document.querySelectorAll('#carouselDots .carousel-dot');
+
+  function updateCarousel(){
+    track.style.transform = `translateX(-${current * 100}%)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  }
+
+  window.moveCarousel = function(dir){
+    current = (current + dir + total) % total;
+    updateCarousel();
+  };
+
+  window.goToSlide = function(idx){
+    current = idx;
+    updateCarousel();
+  };
+
+  // Auto-advance every 5 seconds
+  setInterval(() => window.moveCarousel(1), 5000);
+})();
+</script>
+
+<div class="divider"></div>
+
+<!-- Who it's for -->
+<section class="section" id="who">
+  <div style="text-align:center;">
+    <div class="eyebrow">Who it's for</div>
+    <h2 class="section-h">Built for anyone measuring system adoption</h2>
+    <p class="section-p" style="max-width:520px;margin:0 auto;">Whether you're running academic research or a product feedback cycle, Feedora has you covered.</p>
+  </div>
+  <div class="who-grid">
+    <div class="who-card">
+      <div class="who-tag">Researchers</div>
+      <div class="who-card-title">Academic & UX researchers</div>
+      <div class="who-card-desc">Run validated HMSAM studies with pre-loaded constructs, automatic scoring, and Cronbach's alpha reliability checks.</div>
+    </div>
+    <div class="who-card featured">
+      <div class="who-tag">Primary audience</div>
+      <div class="who-card-title">Product & software teams</div>
+      <div class="who-card-desc">Measure whether users are genuinely adopting your hedonic system — not just using it, but enjoying and being motivated by it.</div>
+    </div>
+    <div class="who-card">
+      <div class="who-tag">Anyone</div>
+      <div class="who-card-title">General feedback creators</div>
+      <div class="who-card-desc">Build any survey with gamification features to collect higher quality responses from your audience.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HMSAM Steps -->
+<section class="section" id="hmsam">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div class="eyebrow">HMSAM surveys — step by step</div>
+    <h2 class="section-h">From creation to adoption insight in 5 steps</h2>
+    <p class="section-p" style="max-width:500px;margin:0 auto;">Designed for researchers following the Hedonic-Motivation System Adoption Model</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-connector"></div>
+      <div class="step-title">Create HMSAM survey</div>
+      <div class="step-desc">38 validated questions pre-loaded across 7 constructs. Edit wording freely — construct mapping is fixed.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-connector"></div>
+      <div class="step-title">Add gamification</div>
+      <div class="step-desc">Enable mascot, progress bar, and points to boost respondent engagement and completion rates.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-connector"></div>
+      <div class="step-title">Publish & share</div>
+      <div class="step-desc">Share a direct link or access code. No login required for respondents.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-connector"></div>
+      <div class="step-title">Collect responses</div>
+      <div class="step-desc">Respondents fill the gamified 5-point Likert form on any device.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-title">Analyse results</div>
+      <div class="step-desc">View per-construct HMSAM scores, Cronbach's alpha, and response distributions automatically.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Gamification -->
+<section class="section-full" id="gamify">
+  <div class="section-full-inner">
+    <div style="text-align:center;margin-bottom:8px;">
+      <div class="eyebrow">Gamification features</div>
+      <h2 class="section-h">Make your form more interesting</h2>
+      <p class="section-p" style="max-width:480px;margin:0 auto;">Research shows gamification increases user participation and response quality. Feedora brings these techniques directly into your survey.</p>
+    </div>
+    <div class="gf-grid">
+      <div class="gf-card">
+        <div class="gf-card-header">
+          <div class="gf-icon" style="background:var(--purple-light);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 18l3 3 3-3"/></svg>
+          </div>
+          <div class="gf-card-title">Virtual mascot</div>
+        </div>
+        <div class="gf-card-desc">A friendly mascot greets respondents on entry, encourages them at the halfway point, asks them to stay if they try to leave, and thanks them on completion.</div>
+      </div>
+      <div class="gf-card">
+        <div class="gf-card-header">
+          <div class="gf-icon" style="background:var(--green-light);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2"><rect x="3" y="3" width="18" height="4" rx="2"/><rect x="3" y="10" width="14" height="4" rx="2"/><rect x="3" y="17" width="9" height="4" rx="2"/></svg>
+          </div>
+          <div class="gf-card-title">Progress bar</div>
+        </div>
+        <div class="gf-card-desc">A customisable progress bar shows how far through the form respondents are. Choose style (solid, striped, gradient), colour, and label type.</div>
+      </div>
+      <div class="gf-card">
+        <div class="gf-card-header">
+          <div class="gf-icon" style="background:var(--amber-light);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2"><polygon points="12,2 15,9 22,9 17,14 19,21 12,17 5,21 7,14 2,9 9,9"/></svg>
+          </div>
+          <div class="gf-card-title">Points system</div>
+        </div>
+        <div class="gf-card-desc">Respondents earn points for every answer. Creators can customise point values per question type. Total points are displayed on the thank you page.</div>
+      </div>
+      <div class="gf-card">
+        <div class="gf-card-header">
+          <div class="gf-icon" style="background:var(--amber-light);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#854F0B" stroke-width="2"><circle cx="12" cy="8" r="3"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+          </div>
+          <div class="gf-card-title">Badges & leaderboard</div>
+        </div>
+        <div class="gf-card-desc">Registered respondents earn bronze, silver, and gold badges. A leaderboard shows top respondents — motivating continued engagement across surveys.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="eyebrow">Get started today</div>
+  <h2 class="cta-title">Ready to run your first HMSAM study?</h2>
+  <p class="cta-desc">Create your free account and launch a gamified survey in under 5 minutes.</p>
+  <div class="cta-btns">
+    <a href="{% url 'register_creator' %}" class="btn-primary" style="font-size:14px;padding:11px 26px;">Create free account</a>
+    <a href="{% url 'login_creator' %}" class="btn-outline" style="font-size:14px;padding:11px 26px;">Log in</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<div style="border-top:1px solid var(--line);">
+  <div class="footer">
+    <div class="footer-logo">Feedora</div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% if is_hmsam %}HMSAM Survey{% else %}New Survey{% endif %} — Feedora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/survey_format.css' %}">
+</head>
+<body>
+
+<!-- TOPBAR — three-region grid so tabs align with canvas centre -->
+<header class="topbar">
+  <div class="topbar-left">
+    <a href="/" class="brand">Feedora</a>
+    <input class="form-name-input" id="surveyNameInput"
+           value="{% if is_hmsam %}HMSAM Survey{% else %}Untitled{% endif %}"
+           placeholder="Survey name">
+    <span class="save-status" id="saveStatus"></span>
+  </div>
+
+  <div class="topbar-centre">
+    <button class="topbar-tab active" id="tabBuild">Build</button>
+    <button class="topbar-tab" data-action="features" id="tabFeatures" type="button">
+      Add features
+    </button>
+  </div>
+
+  <div class="topbar-right">
+    <button class="btn-icon" id="btnUndo" title="Undo" disabled>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="1,4 1,10 7,10"/>
+        <path d="M3.51 15a9 9 0 1 0 .49-3.56"/>
+      </svg>
+    </button>
+    <button class="btn-icon" id="btnRedo" title="Redo" disabled>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23,4 23,10 17,10"/>
+        <path d="M20.49 15a9 9 0 1 1-.49-3.56"/>
+      </svg>
+    </button>
+    <button class="btn-icon" id="btnPreviewForm" title="Preview form">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+    <button class="btn-icon" title="Share">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>
+        <circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+    </button>
+    <button class="btn-publish" id="btnPublish">{% if edit_mode %}Re-Publish{% else %}Publish{% endif %}</button>
+  </div>
+</header>
+
+<!-- OUTER GRID -->
+<div class="outer" id="outerGrid">
+
+  <!-- CANVAS -->
+  <main class="canvas" id="mainCanvas">
+    <div class="canvas-inner">
+
+      {% if is_hmsam %}
+      <div class="hmsam-notice">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span><strong>HMSAM template</strong> — 38 validated questions across
+        7 constructs. Edit wording freely; construct mapping is fixed.</span>
+      </div>
+      {% endif %}
+
+      <!-- Header card -->
+      <div class="header-card" id="headerCard">
+        <div class="header-img-wrap" id="headerImgWrap" style="display:none;">
+          <img id="headerImg" src="" alt="">
+          <button class="header-img-remove" id="headerImgRemove" title="Remove">✕</button>
+        </div>
+        <input class="form-title-input" id="formTitle"
+               placeholder="Untitled form"
+               value="{% if is_hmsam %}Hedonic System Adoption Survey{% endif %}">
+        <textarea class="form-desc-input" id="formDesc"
+                  placeholder="Form description" rows="2">{% if is_hmsam %}Please answer the following questions based on your experience with the system. There are no right or wrong answers.{% endif %}</textarea>
+        
+        <!-- Section navigation (shown when 2+ sections exist) removed for now - will add back later
+        <div class="section-nav-wrap" id="sectionNavWrap" style="display:none;">
+          <span class="section-nav-label">After section 1</span>
+          <select class="section-nav-select" id="sectionNavSelect">
+            <option value="next">Continue to next section</option>
+          </select>
+        </div>-->
+      </div>
+
+      <!-- Sections rendered by JS -->
+      <div id="sectionsContainer"></div>
+
+      {% if not is_hmsam %}
+      <div class="add-row" id="addRow">
+        <button class="add-btn" id="addQ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Add question
+        </button>
+        <button class="add-btn" id="addSection">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+          Add section
+        </button>
+      </div>
+      {% endif %}
+
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="panel" id="themePanel">
+
+    <div class="panel-head">
+      <div class="panel-head-top">
+        <div>
+          <div class="panel-main-title">Customize theme</div>
+          <div class="panel-sub-title">Customize how your form looks</div>
+        </div>
+        <button class="panel-close-btn" id="panelCloseBtn" title="Close">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      
+    </div>
+
+    <div class="panel-body">
+
+      <!-- ① Questions -->
+      <div class="acc-section open" id="acc-questions">
+        <div class="acc-header" onclick="toggleAcc('acc-questions')">
+          <span class="acc-title">Questions</span>
+          <svg class="acc-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+        <div class="acc-body">
+          <div class="sub-label">Question color</div>
+          <div class="swatches" data-target="qcolor">
+            <div class="swatch active" style="background:#14140F" data-color="#14140F"></div>
+            <div class="swatch" style="background:#1F4D8F" data-color="#1F4D8F"></div>
+            <div class="swatch" style="background:#0F6B4F" data-color="#0F6B4F"></div>
+            <div class="swatch" style="background:#A04545" data-color="#A04545"></div>
+            <div class="swatch" style="background:#7A4FA8" data-color="#7A4FA8"></div>
+            <div class="swatch" style="background:#B87333" data-color="#B87333"></div>
+            
+          </div>
+          <input type="color" id="qColorPicker" class="hidden-picker">
+
+          <div class="sub-label" style="margin-top:16px;">Question font</div>
+          <div class="font-list" id="qFontList">
+            <div class="font-row active" data-font="'Inter',sans-serif">
+              <span class="f-name">Inter</span>
+              <span class="f-sample" style="font-family:'Inter',sans-serif">Aa</span>
+            </div>
+            <div class="font-row" data-font="'Instrument Serif',serif">
+              <span class="f-name">Instrument Serif</span>
+              <span class="f-sample" style="font-family:'Instrument Serif',serif">Aa</span>
+            </div>
+            <div class="font-row" data-font="Georgia,serif">
+              <span class="f-name">Georgia</span>
+              <span class="f-sample" style="font-family:Georgia,serif">Aa</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② Header -->
+      <div class="acc-section open" id="acc-header">
+        <div class="acc-header" onclick="toggleAcc('acc-header')">
+          <span class="acc-title">Header</span>
+          <svg class="acc-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+        <div class="acc-body">
+
+          <div class="sub-label">Header accent color</div>
+          <div class="swatches" data-target="accent">
+            <div class="swatch active" style="background:#14140F" data-color="#14140F"></div>
+            <div class="swatch" style="background:#1F4D8F" data-color="#1F4D8F"></div>
+            <div class="swatch" style="background:#0F6B4F" data-color="#0F6B4F"></div>
+            <div class="swatch" style="background:#A04545" data-color="#A04545"></div>
+            <div class="swatch" style="background:#7A4FA8" data-color="#7A4FA8"></div>
+            <div class="swatch" style="background:#B87333" data-color="#B87333"></div>
+            
+          </div>
+          <input type="color" id="accentPicker" class="hidden-picker">
+          <input type="range" class="slider" id="accentSlider" min="0" max="14" value="6">
+          <div class="slider-row"><span>0</span><span id="accentVal">6 px</span><span>14</span></div>
+
+          <div class="sub-label" style="margin-top:16px;">Header font</div>
+          <div class="font-list" id="headerFontList">
+            <div class="font-row active" data-font="'Instrument Serif',serif">
+              <span class="f-name">Instrument Serif</span>
+              <span class="f-sample" style="font-family:'Instrument Serif',serif">Aa</span>
+            </div>
+            <div class="font-row" data-font="'Inter',sans-serif">
+              <span class="f-name">Inter</span>
+              <span class="f-sample" style="font-family:'Inter',sans-serif">Aa</span>
+            </div>
+            <div class="font-row" data-font="Georgia,serif">
+              <span class="f-name">Georgia</span>
+              <span class="f-sample" style="font-family:Georgia,serif">Aa</span>
+            </div>
+          </div>
+
+          <div class="sub-label" style="margin-top:16px;">Header color</div>
+          <div class="swatches" data-target="headercolor">
+            <div class="swatch active" style="background:#14140F" data-color="#14140F"></div>
+            <div class="swatch" style="background:#1F4D8F" data-color="#1F4D8F"></div>
+            <div class="swatch" style="background:#0F6B4F" data-color="#0F6B4F"></div>
+            <div class="swatch" style="background:#A04545" data-color="#A04545"></div>
+            <div class="swatch" style="background:#7A4FA8" data-color="#7A4FA8"></div>
+            <div class="swatch" style="background:#B87333" data-color="#B87333"></div>
+            
+          </div>
+          <input type="color" id="headerColorPicker" class="hidden-picker">
+
+          <div class="sub-label" style="margin-top:16px;">Header image</div>
+          <input type="file" id="headerImgInput" accept="image/*" style="display:none;">
+          <button class="img-upload-btn" id="headerImgBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21,15 16,10 5,21"/>
+            </svg>
+            Choose image
+          </button>
+          <div class="img-filename" id="imgFilename"></div>
+        </div>
+      </div>
+
+      <!-- ③ Background -->
+      <div class="acc-section open" id="acc-bg">
+        <div class="acc-header" onclick="toggleAcc('acc-bg')">
+          <span class="acc-title">Background</span>
+          <svg class="acc-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+        <div class="acc-body">
+          <div class="seg seg-4" id="bgSeg">
+            <button class="seg-item active" data-bg="#fafaf7">Cream</button>
+            <button class="seg-item" data-bg="#ffffff">White</button>
+            <button class="seg-item" data-bg="#f0f3f7">Cool</button>
+            <button class="seg-item" data-bg="#1a1a14">Dark</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ Button -->
+      <div class="acc-section open" id="acc-btn">
+        <div class="acc-header" onclick="toggleAcc('acc-btn')">
+          <span class="acc-title">Button</span>
+          <svg class="acc-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+        <div class="acc-body">
+          <div class="btn-preview-wrap"><button id="btnPreview">Submit</button></div>
+          <div class="sub-label">Button text</div>
+          <input type="text" class="panel-text-input" id="btnText" value="Submit">
+          <div class="sub-label" style="margin-top:14px;">Button color</div>
+          <div class="swatches" data-target="btncolor">
+            <div class="swatch active" style="background:#14140F" data-color="#14140F"></div>
+            <div class="swatch" style="background:#1F4D8F" data-color="#1F4D8F"></div>
+            <div class="swatch" style="background:#0F6B4F" data-color="#0F6B4F"></div>
+            <div class="swatch" style="background:#A04545" data-color="#A04545"></div>
+            <div class="swatch" style="background:#7A4FA8" data-color="#7A4FA8"></div>
+            <div class="swatch" style="background:#B87333" data-color="#B87333"></div>
+            
+          </div>
+          <input type="color" id="btnColorPicker" class="hidden-picker">
+          <div class="sub-label" style="margin-top:14px;">Shape</div>
+          <div class="seg seg-4" id="shapeRow">
+            <button class="seg-item" data-radius="0">Square</button>
+            <button class="seg-item active" data-radius="6">Rounded</button>
+            <button class="seg-item" data-radius="999">Pill</button>
+            <button class="seg-item" data-style="outline">Outline</button>
+          </div>
+          <div class="sub-label" style="margin-top:14px;">Size</div>
+          <div class="seg seg-4" id="sizeRow">
+            <button class="seg-item" data-pad="6px 14px" data-fs="12px">S</button>
+            <button class="seg-item active" data-pad="10px 22px" data-fs="14px">M</button>
+            <button class="seg-item" data-pad="13px 28px" data-fs="15px">L</button>
+            <button class="seg-item" data-pad="16px 36px" data-fs="16px">XL</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ All Required -->
+      <div class="acc-section open" id="acc-allreq">
+        <div class="acc-header" onclick="toggleAcc('acc-allreq')">
+          <span class="acc-title">All required</span>
+          <svg class="acc-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+        <div class="acc-body">
+          <div class="all-req-row">
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--ink);">Mark all as required</div>
+              <div style="font-size:12px;color:var(--ink-3);margin-top:2px;">Respondents must answer every question</div>
+            </div>
+            <div class="toggle" id="allReqToggle"></div>
+          </div>
+        </div>
+      </div>
+
+      {% if is_hmsam %}
+      <div class="acc-section open" id="acc-constructs">
+        <div class="acc-header" onclick="toggleAcc('acc-constructs')">
+          <span class="acc-title">HMSAM Constructs</span>
+          <svg class="acc-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6,9 12,15 18,9"/></svg>
+        </div>
+        <div class="acc-body">
+          <div class="construct-list" id="constructList"></div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </aside>
+
+</div>
+
+<!-- FAB -->
+<button class="panel-toggle-fab" id="panelFab" title="Customize theme">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="15,18 9,12 15,6"/>
+  </svg>
+</button>
+
+<script id="surveyData" type="application/json">
+{
+  "is_hmsam":        {% if is_hmsam %}true{% else %}false{% endif %},
+  "hmsam_questions": {{ hmsam_questions_json|safe }},
+  "save_url":        "{% if save_url %}{{ save_url }}{% else %}{% url 'create_survey' survey_type %}{% endif %}",
+  "csrf_token":      "{{ csrf_token }}"
+}
+</script>
+<script>
+  const _d            = JSON.parse(document.getElementById('surveyData').textContent);
+  const IS_HMSAM        = _d.is_hmsam;
+  const HMSAM_QUESTIONS = _d.hmsam_questions;
+  const SAVE_URL        = _d.save_url;
+  const CSRF_TOKEN      = _d.csrf_token;
+
+  function toggleAcc(id){ document.getElementById(id).classList.toggle('open'); }
+
+  /* Panel open/close */
+  document.getElementById('panelCloseBtn').addEventListener('click', () => {
+    document.getElementById('outerGrid').classList.add('panel-hidden');
+    document.getElementById('panelFab').classList.add('visible');
+  });
+  document.getElementById('panelFab').addEventListener('click', () => {
+    document.getElementById('outerGrid').classList.remove('panel-hidden');
+    document.getElementById('panelFab').classList.remove('visible');
+  });
+
+  /* Panel tabs */
+  document.querySelectorAll('.panel-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.panel-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+
+  /* Topbar tabs 
+  document.querySelectorAll('.topbar-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.topbar-tab').forEach(x=>x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });*/
+  
+</script>
+{% if edit_mode %}
+<script>
+  window.PREFILL = {
+    title: '{{ prefill_title|escapejs }}',
+    description: '{{ prefill_desc|escapejs }}',
+    accent: '{{ prefill_accent }}',
+    bg: '{{ prefill_bg }}',
+    submitLabel: '{{ prefill_submit_label }}',
+    btnColor: '{{ prefill_btn_color }}',
+    btnRadius: '{{ prefill_btn_radius }}',
+    headerImage: '{{ prefill_header_image }}',
+    qFont: '{{ prefill_q_font|escapejs }}', 
+    headerFont: '{{ prefill_header_font|escapejs }}',  
+    questions: {{ prefill_questions|safe }},
+};
+</script>
+{% endif %}
+
+<!-- Unsaved-changes confirmation modal -->
+<div class="exit-modal-overlay" id="exitModalOverlay">
+  <div class="exit-modal" role="dialog" aria-modal="true" aria-labelledby="exitModalTitle">
+    <button class="exit-modal-close" id="exitModalClose" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <h2 class="exit-modal-title" id="exitModalTitle">Are you sure?</h2>
+    <p class="exit-modal-desc">If you leave now, you may lose your progress.</p>
+    <button class="exit-modal-btn exit-modal-btn-primary" id="exitModalConfirm">Yes, I'm sure</button>
+    <button class="exit-modal-btn exit-modal-btn-secondary" id="exitModalCancel">No, go back to the form</button>
+  </div>
+</div>
+
+<div class="publish-modal" id="createdModal" style="display:none;">
+  <div class="publish-modal-box">
+    <div class="publish-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+           stroke="#16a34a" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="20,6 9,17 4,12"/>
+      </svg>
+    </div>
+    <h2 class="publish-title">Form published!</h2>
+    <p class="publish-text">
+      The form is published and is ready for responses.
+    </p>
+    <div class="publish-btns">
+      <a href="#" class="pub-btn-primary" id="createdOkBtn">OK</a>
+    </div>
+  </div>
+</div>
+
+<div class="publish-modal" id="publishModal" style="display:none;">
+  <div class="publish-modal-box">
+    <div class="publish-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+           stroke="#16a34a" stroke-width="2.5" stroke-linecap="round">
+        <polyline points="20,6 9,17 4,12"/>
+      </svg>
+    </div>
+    <h2 class="publish-title">Changes saved!</h2>
+    <p class="publish-text">
+      The changes made were saved &amp; is ready to reshare with respondents!<br>
+      What would you like to do next?
+    </p>
+    <div class="publish-btns">
+      <button class="pub-btn-secondary" onclick="closePublishModal()">
+        Continue with changes
+      </button>
+      <a href="#" class="pub-btn-primary" id="goToSurveyBtn">
+        Exit form builder
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/survey_builder.js' %}"></script> 
+</body>
+</html>
