@@ -9,7 +9,7 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-# ── Apps ──────────────────────────────────────────────────
+# Apps 
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -36,7 +36,7 @@ INSTALLED_APPS = [
 ]
 
 
-# ── Middleware ─────────────────────────────────────────────
+# Middleware 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -71,7 +71,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'feedora_project.wsgi.application'
 
 
-# ── Database ───────────────────────────────────────────────
+# Database 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -80,9 +80,9 @@ DATABASES = {
 }
 
 
-# ── Auth ───────────────────────────────────────────────────
+# Auth 
 
-# Points Django to custom User model (you'll create this in accounts/models.py)
+# Points Django to custom User model (in accounts/models.py)
 AUTH_USER_MODEL = 'accounts.User'
 
 # Tell Django to use allauth for authentication instead of the default backend
@@ -97,7 +97,7 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 
 
-# ── Allauth configuration ──────────────────────────────────
+# Allauth configuration 
 
 # Use email as the login identifier, not username
 ACCOUNT_LOGIN_METHODS = {'email'}
@@ -107,14 +107,15 @@ ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # Where to send users after login and logout
+LOGIN_URL = 'role_select_login'
 LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
-# Use your own custom templates instead of allauth's default ones
+# To use my own custom templates instead of allauth's default ones
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Feedora] '
 
 
-# ── Google OAuth ───────────────────────────────────────────
+# Google OAuth 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
@@ -126,7 +127,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 
-# ── Password validation ────────────────────────────────────
+# Password validation 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -135,25 +136,25 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# ── Internationalisation ───────────────────────────────────
+# Internationalisation 
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Colombo'   # changed from UTC since you're in Sri Lanka
+TIME_ZONE = 'Asia/Colombo'   # Changed from UTC
 USE_I18N = True
 USE_TZ = True
 
 
-# ── Static files ───────────────────────────────────────────
+# Static files
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']   # your local static folder
+STATICFILES_DIRS = [BASE_DIR / 'static']   # local static folder
 STATIC_ROOT = BASE_DIR / 'staticfiles'     # where collectstatic outputs to (for deployment)
 
 
-# ── Email ──────────────────────────────────────────────────
-# During development this prints emails to your terminal instead of sending them.
-# You'll see the verification code appear in the console when a user registers.
+# Email 
+# During development this prints emails to terminal instead of sending them.
+# Verification code appears in the console when a user registers.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# When you're ready to send real emails (e.g. on PythonAnywhere), swap to:
+# When ready to send real emails (e.g. on PythonAnywhere), swap to:
 # EMAIL_BACKEND = 'django.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.gmail.com'
 # EMAIL_PORT = 587

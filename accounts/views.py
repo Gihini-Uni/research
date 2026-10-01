@@ -7,22 +7,31 @@ from .models import User, Organization, EmailVerificationCode, CreatorProfile, R
 from django.db.models import Sum, Count
 from surveys.models import Survey, Response
 from .utils import get_level_info
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Organization, CreatorProfile, RespondentProfile
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+from django.views.decorators.cache import never_cache
 
 
 # ── Role selection ─────────────────────────────────────────
 
+@never_cache
 def role_select_login(request):
     return render(request, 'accounts/role_select.html', {'mode': 'login'})
 
+@never_cache
 def role_select_register(request):
     return render(request, 'accounts/role_select.html', {'mode': 'register'})
 
 
 # ── Login ──────────────────────────────────────────────────
-
+@never_cache
 def login_creator(request):
     return _login_view(request, role='creator')
 
+@never_cache
 def login_respondent(request):
     return _login_view(request, role='respondent')
 
@@ -178,15 +187,18 @@ def _send_verification_code(user):
 from django.contrib.auth.decorators import login_required
 
 @login_required
+@never_cache
 def dashboard(request):
     return render(request, 'accounts/creator_home.html')
 
 @login_required
+@never_cache
 def respondent_home(request):
-    return render(request, 'accounts/respondent_placeholder.html')
+    return render(request, 'accounts/respondent_profile.html')
 
 
 @login_required
+@never_cache
 def creator_profile(request):
     profile, _ = CreatorProfile.objects.get_or_create(user=request.user)
 
@@ -214,6 +226,7 @@ def creator_profile(request):
 
 
 @login_required
+@never_cache
 def respondent_profile(request):
     profile, _ = RespondentProfile.objects.get_or_create(user=request.user)
 
@@ -258,3 +271,38 @@ def respondent_profile(request):
         'points_by_company': points_by_company,
         'level':             get_level_info(total),
     })
+
+
+@login_required
+@never_cache
+def my_profile(request):
+    """
+    Single entry point. Picks the creator or respondent template based on
+    request.user.role, and passes the related Organization + role profile.
+    Uses first()/get-or-None so missing related rows don't 500 the page.
+    """
+    user = request.user
+
+    # Organization is a OneToOne but may not exist yet — fetch safely.
+    organization = Organization.objects.filter(user=user).first()
+
+    if user.role == User.RESPONDENT:
+        profile = RespondentProfile.objects.filter(user=user).first()
+        return render(request, 'accounts/respondent_profile.html', {
+            'user':         user,
+            'organization': organization,
+            'profile':      profile,
+        })
+    else:
+        # default to creator view for creators (or unset role)
+        profile = CreatorProfile.objects.filter(user=user).first()
+        return render(request, 'accounts/creator_profile.html', {
+            'user':         user,
+            'organization': organization,
+            'profile':      profile,
+        })
+
+
+def logout_view(request):
+    logout(request)
+    return redirect('login_creator')  

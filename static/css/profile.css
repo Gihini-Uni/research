@@ -1,0 +1,219 @@
+/* Feedora — Profile Styles */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --brand-dark:    #1a1a1a;
+  --brand-olive:   #4a5c2f;
+  --brand-olive-h: #3a4a24;
+  --brand-muted:   #6b7280;
+  --brand-border:  #e5e7eb;
+  --brand-bg:      #f9f9f7;
+  --brand-surface: #ffffff;
+
+  --profile-tint:  #ede9fb;   /* soft lilac from the mockups */
+  --profile-tint-2:#f4f1fd;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 100px;
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --font-display: 'DM Serif Display', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --transition: 0.18s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--brand-dark);
+  background: var(--brand-bg);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Top bar ─────────────────────────────────────────────── */
+.pf-topbar {
+  height: 56px;
+  background: var(--brand-surface);
+  border-bottom: 1px solid var(--brand-border);
+  display: flex;
+  align-items: center;
+  padding: 0 26px;
+}
+.pf-brand {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--brand-dark);
+  text-decoration: none;
+}
+.pf-topbar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+
+/* ── Shell: sidebar + content ────────────────────────────── */
+.pf-shell {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+.pf-sidebar {
+  background: var(--profile-tint);
+  padding: 28px 18px;
+  border-right: 1px solid var(--brand-border);
+}
+.pf-nav { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.pf-nav a {
+  display: block;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--brand-dark);
+  text-decoration: none;
+  transition: background var(--transition);
+}
+.pf-nav a:hover { background: rgba(255,255,255,0.55); }
+.pf-nav a.active { background: var(--brand-surface); box-shadow: var(--shadow-card); }
+
+/* ── Content column ──────────────────────────────────────── */
+.pf-content {
+  background: var(--profile-tint-2);
+  padding: 40px 48px;
+}
+.pf-heading {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 400;
+  margin-bottom: 2px;
+}
+.pf-subheading {
+  font-size: 14px;
+  color: var(--brand-muted);
+  margin-bottom: 32px;
+}
+
+/* avatar + card sit side by side on wide screens */
+.pf-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* ── Avatar block ────────────────────────────────────────── */
+.pf-avatar-block { text-align: center; }
+.pf-avatar {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  border: 2px solid var(--brand-dark);
+  background: var(--brand-surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  overflow: hidden;
+}
+.pf-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.pf-avatar svg { width: 68px; height: 68px; color: var(--brand-dark); }
+.pf-avatar-actions { font-size: 13px; }
+.pf-avatar-actions a { color: var(--brand-olive); text-decoration: none; font-weight: 500; }
+.pf-avatar-actions a:hover { text-decoration: underline; }
+.pf-avatar-actions .sep { color: var(--brand-muted); margin: 0 6px; }
+.pf-avatar-actions .muted { color: var(--brand-muted); }
+
+/* ── Info card ───────────────────────────────────────────── */
+.pf-card {
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 26px 30px;
+  position: relative;
+}
+.pf-card + .pf-card { margin-top: 20px; }
+
+.pf-card-edit {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--brand-border);
+  background: var(--brand-surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-muted);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition);
+}
+.pf-card-edit:hover { color: var(--brand-olive); border-color: var(--brand-olive); }
+
+/* two-column field grid */
+.pf-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 40px;
+}
+.pf-field { display: flex; gap: 10px; align-items: flex-start; }
+.pf-field-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--brand-olive);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.pf-field-body { min-width: 0; }
+.pf-field-label {
+  font-size: 12px;
+  color: var(--brand-muted);
+  margin-bottom: 1px;
+}
+.pf-field-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--brand-dark);
+  word-break: break-word;
+}
+.pf-field-value.email { text-decoration: underline; }
+.pf-field-value.add {
+  color: var(--brand-muted);
+  font-weight: 400;
+  cursor: pointer;
+}
+.pf-field-value.add:hover { color: var(--brand-olive); }
+
+/* divider between personal + org sections inside one card */
+.pf-card-divider {
+  border: 0;
+  border-top: 1px solid var(--brand-border);
+  margin: 24px 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .pf-shell { grid-template-columns: 1fr; }
+  .pf-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--brand-border);
+    padding: 16px 18px;
+  }
+  .pf-nav { flex-direction: row; gap: 8px; }
+  .pf-content { padding: 28px 22px; }
+  .pf-layout { grid-template-columns: 1fr; gap: 26px; }
+  .pf-avatar-block { text-align: left; }
+  .pf-avatar { margin-left: 0; }
+}
+
+@media (max-width: 520px) {
+  .pf-fields { grid-template-columns: 1fr; gap: 18px; }
+  .pf-content { padding: 22px 16px; }
+  .pf-heading { font-size: 25px; }
+}

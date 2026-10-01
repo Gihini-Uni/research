@@ -1,9 +1,9 @@
 LEVELS = [
     # (min_points, level_num, title, max_points)
     (0, 1, 'New Voice', 99),
-    (100, 2, 'Contributor', 299),
-    (300, 3, 'Active Member', 599),
-    (600, 4, 'Trusted Respondent', 999),
+    (100, 2, 'Contributor', 399),
+    (400, 3, 'Active Member', 699),
+    (700, 4, 'Trusted Respondent', 999),
     (1000, 5, 'Community Champion', None),
 ]
 

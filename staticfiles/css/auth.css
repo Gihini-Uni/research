@@ -844,3 +844,86 @@ select.form-control {
     min-height: 118px;
   }
 }
+
+/* ── Profile dropdown in dashboard nav ── */
+.dashboard-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.profile-menu { position: relative; }
+
+.profile-trigger {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px 4px 4px;
+  border-radius: 100px;
+  transition: background .15s;
+}
+.profile-trigger:hover { background: var(--brand-bg); }
+
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #a9cce8;            /* soft blue like the mockup */
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  object-fit: cover;             /* in case it's an <img> */
+  overflow: hidden;
+}
+
+.profile-caret {
+  color: var(--brand-muted);
+  transition: transform .2s ease, color .15s;
+}
+.profile-trigger:hover .profile-caret { color: var(--brand-dark); }
+.profile-menu.open .profile-caret { transform: rotate(180deg); }
+
+.profile-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 172px;
+  background: var(--brand-surface);
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.12);
+  padding: 6px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity .16s ease, transform .16s ease, visibility .16s;
+  z-index: 100;
+}
+.profile-menu.open .profile-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.profile-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--brand-dark);
+  text-decoration: none;
+  transition: background .13s;
+}
+.profile-item:hover { background: var(--brand-bg); }
+.profile-item svg { color: var(--brand-muted); flex-shrink: 0; }
