@@ -3,8 +3,8 @@ import json as json_lib
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 from .models import Survey, Question, MCQOption, Response, Answer
 from .hmsam import HMSAM_QUESTIONS
 from django.db import transaction
@@ -230,6 +230,49 @@ def access_survey(request):
                 error = 'Invalid code. Please check and try again.'
     return render(request, 'surveys/access.html', {'error': error, 'submitted_code': submitted_code})
 
+
+
+@require_GET
+@ensure_csrf_cookie
+def respond_survey_meta(request, uid):
+    """Read-only survey metadata as JSON (questions + features).
+
+    Added for the form-builder-engine Feedora showcase so a client can render
+    the survey and its gamification features without scraping the HTML page.
+    ``ensure_csrf_cookie`` makes this the one GET a client needs to call first
+    to receive (and then echo back on submit) a CSRF token.
+    """
+    survey = get_object_or_404(Survey, access_uuid=uid, is_active=True)
+
+    questions = []
+    for q in survey.questions.all().order_by('order'):
+        questions.append({
+            'id':            q.id,
+            'text':          q.text,
+            'code':          q.code,
+            'type':          q.question_type,
+            'construct':     q.hmsam_construct or '',
+            'required':      q.is_required,
+            'options':       [{'id': o.id, 'text': o.text, 'order': o.order}
+                              for o in q.options.all().order_by('order')],
+            'ratingMax':     q.rating_max,
+            'ratingStyle':   q.rating_style,
+            'sectionTitle':  q.section_title,
+            'sectionNum':    q.section_num,
+        })
+
+    return JsonResponse({
+        'survey': {
+            'id':          survey.id,
+            'uuid':        str(survey.access_uuid),
+            'title':       survey.title,
+            'description': survey.description,
+            'is_hmsam':    survey.is_hmsam,
+            'access_code': survey.access_code,
+        },
+        'features':  survey.features or {},
+        'questions': questions,
+    })
 
 
 def submit_response(request, uid):

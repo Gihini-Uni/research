@@ -17,6 +17,7 @@ urlpatterns = [
     # Respondent side — all public, no login required
     path('access/',                   views.access_survey,      name='access_survey'),
     path('respond/<uuid:uid>/',       views.respond_survey,     name='respond_survey'),
+    path('respond/<uuid:uid>/meta/',  views.respond_survey_meta, name='respond_survey_meta'),
     path('respond/<uuid:uid>/submit/',views.submit_response,    name='submit_response'),
 
     path('<uuid:uid>/features/', views.add_features, name='add_features'),
