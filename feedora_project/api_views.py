@@ -304,14 +304,7 @@ def api_surveys_list(request):
     return JsonResponse({'ok': True, 'surveys': items})
 
 
-@require_GET
-def api_survey_meta(request, access_uuid):
-    """Fetch survey metadata and ordered questions with choice options."""
-    try:
-        survey = Survey.objects.get(access_uuid=access_uuid, is_active=True)
-    except Survey.DoesNotExist:
-        return JsonResponse({'ok': False, 'error': 'Survey not found'}, status=404)
-
+def _serialize_survey_meta(survey):
     questions = []
     for q in survey.questions.all().order_by('order'):
         questions.append({
@@ -328,7 +321,7 @@ def api_survey_meta(request, access_uuid):
             'sectionNum': q.section_num,
         })
 
-    return JsonResponse({
+    return {
         'ok': True,
         'survey': {
             'id': survey.id,
@@ -347,7 +340,30 @@ def api_survey_meta(request, access_uuid):
         },
         'features': survey.features or {},
         'questions': questions,
-    })
+    }
+
+
+@require_GET
+def api_survey_meta(request, access_uuid):
+    """Fetch survey metadata and ordered questions with choice options by UUID."""
+    try:
+        survey = Survey.objects.get(access_uuid=access_uuid, is_active=True)
+    except Survey.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Survey not found'}, status=404)
+
+    return JsonResponse(_serialize_survey_meta(survey))
+
+
+@require_GET
+def api_survey_meta_by_code(request, access_code):
+    """Fetch survey metadata and ordered questions by 6-char access code."""
+    try:
+        survey = Survey.objects.get(access_code=access_code.strip().upper(), is_active=True)
+    except Survey.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': f'Survey with access code {access_code} not found'}, status=404)
+
+    return JsonResponse(_serialize_survey_meta(survey))
+
 
 
 @csrf_exempt
