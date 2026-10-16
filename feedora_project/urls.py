@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/', include('feedora_project.api_urls')),
     path('accounts/', include('accounts.urls')),
     path('surveys/', include('surveys.urls')),
     path('', TemplateView.as_view(template_name='home.html'), name='home'),
