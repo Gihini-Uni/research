@@ -1,0 +1,12 @@
+{
+  "name": "gihini-research",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gihini University Research & Survey Service (Python / Django)",
+  "scripts": {
+    "dev": "node -e \"const py = process.platform === 'win32' ? 'venv/Scripts/python.exe' : 'venv/bin/python'; require('child_process').spawnSync(py, ['manage.py', 'runserver', '8000'], { stdio: 'inherit' });\"",
+    "check": "node -e \"const py = process.platform === 'win32' ? 'venv/Scripts/python.exe' : 'venv/bin/python'; require('child_process').spawnSync(py, ['manage.py', 'check'], { stdio: 'inherit' });\"",
+    "test": "node -e \"const py = process.platform === 'win32' ? 'venv/Scripts/python.exe' : 'venv/bin/python'; require('child_process').spawnSync(py, ['manage.py', 'test'], { stdio: 'inherit' });\"",
+    "migrate": "node -e \"const py = process.platform === 'win32' ? 'venv/Scripts/python.exe' : 'venv/bin/python'; require('child_process').spawnSync(py, ['manage.py', 'migrate'], { stdio: 'inherit' });\""
+  }
+}
